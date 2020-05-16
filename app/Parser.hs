@@ -27,16 +27,53 @@ mouseClickParser :: SF GameInput (Event ())
 mouseClickParser = proc gi -> do
   returnA -< mClick gi
 
+qClickParser :: SF GameInput (Event ())
+qClickParser = proc gi -> do
+  returnA -< qClick gi
+
+mousePressedParser :: SF GameInput Bool
+mousePressedParser = proc gi -> do
+  returnA -< mPressed gi
+
+mouseEventPressedParser :: SF GameInput (Event ())
+mouseEventPressedParser = proc gi -> do
+  returnA -< mEventPressed gi
+
+mouseEventReleasedParser :: SF GameInput (Event ())
+mouseEventReleasedParser = proc gi -> do
+  returnA -< mEventReleased gi
+  
+
 parseInput :: IO GameInput
 parseInput = do
   events <- SDL.pollEvents
   mousePos <- SDL.getAbsoluteMouseLocation
+  checkBtn <- SDL.getMouseButtons
   let eventIsButtonPressed event =
+        case SDL.eventPayload event of
+          SDL.MouseButtonEvent buttonEvent ->
+            SDL.mouseButtonEventMotion buttonEvent == SDL.Pressed &&
+            SDL.mouseButtonEventButton buttonEvent == SDL.ButtonLeft
+          _ -> False
+      eventIsButtonReleased event = 
         case SDL.eventPayload event of
           SDL.MouseButtonEvent buttonEvent ->
             SDL.mouseButtonEventMotion buttonEvent == SDL.Released &&
             SDL.mouseButtonEventButton buttonEvent == SDL.ButtonLeft
           _ -> False
-      qPressed = any eventIsButtonPressed events
+      eventIsQPress event =
+        case SDL.eventPayload event of
+          SDL.KeyboardEvent keyboardEvent ->
+            SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed &&
+            SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeQ
+          _ -> False
+      qPressed = any eventIsQPress events
+      lmbPressed = any eventIsButtonPressed events
+      lmbReleased = any eventIsButtonReleased events
 
-  return GameInput {mPos = mousePos, mClick = if qPressed then Event () else NoEvent }
+  return GameInput { mPressed = checkBtn SDL.ButtonLeft, 
+                    mEventPressed = if lmbPressed then Event () else NoEvent,
+                    mEventReleased = if lmbReleased then Event () else NoEvent,
+                    mPos = mousePos, 
+                    qClick = if qPressed then Event () else NoEvent,
+                    mClick = if lmbReleased then Event () else NoEvent } -- this is legacy option

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3457eec286295aefb73c6499452c0ef853d065de45abca515cfe99cd09c43201
+-- hash: 68c73dcf30c2449b601f4d9cc4e4034c1f1522135fb51b083e0884147f67d545
 
 name:           sdlyampa
 version:        0.1.0.0
@@ -45,7 +45,6 @@ library
 executable sdlyampa-exe
   main-is: Main.hs
   other-modules:
-      Old
       Parser
       Types
       Update

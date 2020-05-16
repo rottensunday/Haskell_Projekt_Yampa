@@ -107,19 +107,12 @@ main = do
   SDL.quit
 
 
+-- @(p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay)
 
-
-appLoop :: SDL.Renderer -> Texture -> SFont.Font -> Ball -> IO Bool
-appLoop renderer sheet font b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r) = do
+appLoop :: SDL.Renderer -> Texture -> SFont.Font -> GameOutput -> IO Bool
+appLoop renderer sheet font go@(GameOutput b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r) end) = do
   events <- SDL.pollEvents
-  let eventIsQPress event =
-        case SDL.eventPayload event of
-          SDL.KeyboardEvent keyboardEvent ->
-            SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed &&
-            SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeQ
-          _ -> False
-      qPressed = any eventIsQPress events
-      textColor = V4 255 0 0 0
+  let textColor = V4 255 0 0 0
   textTexture <- loadTextTexture renderer font (show p ++ "-------------" ++ show v ++ "-------------" ++ show a) textColor
   SDL.rendererDrawColor renderer $= V4 0 0 0 0
   SDL.clear renderer
@@ -127,4 +120,4 @@ appLoop renderer sheet font b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r
   renderTexture renderer sheet (SDL.P (V2 (round px) (round py))) (Just ballClip)
   renderTexture renderer sheet (SDL.P (V2 608 928)) (Just wallClip)
   SDL.present renderer
-  if qPressed then return True else return False
+  return end

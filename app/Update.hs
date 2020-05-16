@@ -56,6 +56,7 @@ ballController :: Ball -> GameInfo -> BallSF
 ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r)
              gi@(GameInfo sWidth sHeight tWidth tHeight) = proc input -> do
               isClicked <- mouseClickParser -< input -- determine whether we clicked LButton
+              qClicked <- qClickParser >>> arr (isEvent) -< input
               mPos <- mousePosParser -< input -- determine mouse position
 
               rec velModClick <- clickSpeedModifier -< (isClicked `tag` (mPos, P (V2 posX posY), speed, acc, a, rolling)) -- clicking a button changes our velocity
@@ -71,12 +72,15 @@ ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r)
                   posX <- iPre 0 >>> integral >>^ (+px) -< speedX
                   posY <- iPre 0 >>> integral >>^ (+py) -< speedY
 
-              returnA -< Ball {
-                          position = P (V2 posX posY),
-                          velocity = speed,
-                          acceleration = acc,
-                          radius = r
-                        }
+              returnA -< GameOutput {
+                          ball = Ball {
+                            position = P (V2 posX posY),
+                            velocity = speed,
+                            acceleration = acc,
+                            radius = r
+                          },
+                          shouldEnd = qClicked
+                       } 
               where
                 -- getTag (clickEvent) (hitEvent) (clickEventModifiers) (hitEventModifiers) (position) (speed) (acceleration) (radius) (isRolling)
                 getTag :: Event () -> Event () -> V2 Double -> (V2 Double, V2 Double) -> Point V2 Double -> V2 Double -> V2 Double -> Double -> Bool -> Ball
