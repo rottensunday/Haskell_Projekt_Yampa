@@ -14,6 +14,7 @@ import Data.Vector3
 import qualified SDL
 import qualified SDL.Font as SFont
 import FRP.Yampa.Delays
+import Control.Applicative
 
 import Parser
 import Types
@@ -35,7 +36,8 @@ startBall = Ball {
   position = P (V2 640 0),
   velocity = V2 0 0,
   acceleration = V2 0 4.9,
-  radius = 10
+  radius = 10,
+  power = 10
 }
 
 startGameInfo = GameInfo {
@@ -110,14 +112,23 @@ main = do
 -- @(p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay)
 
 appLoop :: SDL.Renderer -> Texture -> SFont.Font -> GameOutput -> IO Bool
-appLoop renderer sheet font go@(GameOutput b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r) end) = do
+appLoop renderer sheet font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) end) = do
   events <- SDL.pollEvents
+  mousePos@(P mV2) <- SDL.getAbsoluteMouseLocation
   let textColor = V4 255 0 0 0
-  textTexture <- loadTextTexture renderer font (show p ++ "-------------" ++ show v ++ "-------------" ++ show a) textColor
+  textTexture <- loadTextTexture renderer font (show p ++ "-------------" ++ show v ++ "-------------" ++ show a ++ "-------------" ++ show pow) textColor
   SDL.rendererDrawColor renderer $= V4 0 0 0 0
   SDL.clear renderer
   renderTexture renderer textTexture (P (V2 100 100)) Nothing
   renderTexture renderer sheet (SDL.P (V2 (round px) (round py))) (Just ballClip)
   renderTexture renderer sheet (SDL.P (V2 608 928)) (Just wallClip)
+  SDL.rendererDrawColor renderer $= V4 255 255 255 255
+  SDL.drawLine renderer (P (fmap round startDir)) (P (fmap round startDir + lineEnd mV2))
   SDL.present renderer
   return end
+    where
+      startDir = pV2 + V2 r r
+      dir :: V2 CInt -> V2 Double
+      dir mV2 = Linear.Metric.normalize (fmap fromIntegral mV2 - pV2)
+      lineEnd :: V2 CInt -> V2 CInt
+      lineEnd mV2 = round <$> V2 pow pow * dir mV2

@@ -23,7 +23,8 @@ data Ball = Ball {
   position :: Point V2 Double,
   velocity :: V2 Double,
   acceleration :: V2 Double,
-  radius :: Double
+  radius :: Double,
+  power :: Double
 }
 
 data GameOutput = GameOutput {

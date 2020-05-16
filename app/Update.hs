@@ -21,15 +21,15 @@ import Parser
 import Types
 
 -- our clicks should only modivy velocity, based on current position and mouse position
-clickSpeedModifier :: SF (Event (Point V2 Double, Point V2 Double, V2 Double, V2 Double, V2 Double, Bool)) (V2 Double)
+clickSpeedModifier :: SF (Event (Point V2 Double, Point V2 Double, V2 Double, V2 Double, V2 Double, Bool, Double)) (V2 Double)
 clickSpeedModifier = proc input -> do
   case input of
     NoEvent -> returnA -< 0
-    Event ((P mPos@(V2 mPosX mPosY)), (P pPos@(V2 pPosX pPosY)), v@(V2 vX vY), a@(V2 aX aY), aStart@(V2 aStartX aStartY), rolling) ->
+    Event ((P mPos@(V2 mPosX mPosY)), (P pPos@(V2 pPosX pPosY)), v@(V2 vX vY), a@(V2 aX aY), aStart@(V2 aStartX aStartY), rolling, pow) ->
       returnA -< velChange
         where
           dir@(V2 vx vy) = Linear.Metric.normalize (mPos - pPos) -- determine direction of movement
-          velChange = 50 * dir -- our new velocity vector has length of 50 in direction of mouse position
+          velChange = (V2 pow pow) * dir -- our new velocity vector has length of 50 in direction of mouse position
 
 -- collisions may affect both velocity and acceleration (for example, when we're rolling and friction works. When we hit a wall,
 -- friction direction should change.) 
@@ -52,14 +52,27 @@ hitSAModifier = proc input -> do
           | vX <= 0   = 1.5
           | otherwise = (-1.5)
 
+-- this SF is supposed to calculate power of ball shot.
+-- it just applies acc value to integral and switches, so we go back and forward
+-- between 0 and 100 power value
+powerCalc :: Double -> Double -> SF Bool Double
+powerCalc acc start = switch (calc) (\cont -> powerCalc (-acc) cont)
+  where
+    calc = proc input -> do
+      rec should_switch <- edge -< val > 100 || val < 0
+          val <- iPre 0 >>> integral >>^ (+start) -< if input then acc else 0
+      returnA -< (val, should_switch `tag` val)
+
 ballController :: Ball -> GameInfo -> BallSF
-ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r)
+ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow)
              gi@(GameInfo sWidth sHeight tWidth tHeight) = proc input -> do
-              isClicked <- mouseClickParser -< input -- determine whether we clicked LButton
+              lmbReleased <- mouseEventReleasedParser -< input -- determine whether we released LMButton
               qClicked <- qClickParser >>> arr (isEvent) -< input
+              -- we have to use delayed switch so jumpPower isn't set to 0 after LMB release. If this happens, we can't really use it to shoot our ball.
+              jumpPower <- drSwitch (mousePressedParser >>> powerCalc 10 0) -< (input, lmbReleased `tag` (mousePressedParser >>> powerCalc 10 0))
               mPos <- mousePosParser -< input -- determine mouse position
 
-              rec velModClick <- clickSpeedModifier -< (isClicked `tag` (mPos, P (V2 posX posY), speed, acc, a, rolling)) -- clicking a button changes our velocity
+              rec velModClick <- clickSpeedModifier -< (lmbReleased `tag` (mPos, P (V2 posX posY), speed, acc, a, rolling, jumpPower)) -- clicking a button changes our velocity
                   -- hitting an edge may change our velocity and acceleration. If we hit a floor and our velocity is very low, we start rolling on the ground.
                   (isGroundHit, rolling) <- fby (NoEvent, False) edgeHitCheck -< (V2 posX posY, speed, rolling, gi) 
                   -- hitting an edge may change our velocity and acceleration
@@ -68,7 +81,7 @@ ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r)
                   -- so it can make its calculation based on new parameters. We provide a parameter for this SF with a "getTag" function,
                   -- which processes click/edge hit events modified values and makes a new ball.
                   (speed@(V2 speedX speedY), acc@(V2 accX accY)) <- fby (V2 0.0 0.0, V2 0.0 0.0) (rSwitch (getVA b)) -< ((input, P (V2 posX posY), speed, acc, rolling),
-                                                                                          lMerge isClicked (isGroundHit `tag` ()) `tag` getVA (getTag isClicked (isGroundHit `tag` ()) velModClick velModHit (P (V2 posX posY)) speed acc r rolling))
+                                                                                          lMerge lmbReleased (isGroundHit `tag` ()) `tag` getVA (getTag lmbReleased (isGroundHit `tag` ()) velModClick velModHit (P (V2 posX posY)) speed acc r rolling))
                   posX <- iPre 0 >>> integral >>^ (+px) -< speedX
                   posY <- iPre 0 >>> integral >>^ (+py) -< speedY
 
@@ -77,7 +90,8 @@ ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r)
                             position = P (V2 posX posY),
                             velocity = speed,
                             acceleration = acc,
-                            radius = r
+                            radius = r,
+                            power = jumpPower
                           },
                           shouldEnd = qClicked
                        } 
@@ -89,19 +103,22 @@ ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r)
                                             position = p,
                                             velocity = modC,
                                             acceleration = a,
-                                            radius = r
+                                            radius = r,
+                                            power = 0
                                           }
                 getTag NoEvent (Event ()) modC modH@(modHv, modHa) p v a r rolling = Ball { -- after collision
                                             position = p,
                                             velocity = modHv,
                                             acceleration = modHa, 
-                                            radius = r
+                                            radius = r,
+                                            power = 0
                                           }
                 getTag (Event ()) (Event ()) modC modH@(modHv, modHa) p v a r rolling = Ball { -- this being called is highly unlikely
                                             position = p,
                                             velocity = modHv,
                                             acceleration = modHa,
-                                            radius = r
+                                            radius = r,
+                                            power = 0
                                           }
 
 
@@ -110,7 +127,7 @@ ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r)
 -- and it may change according to events). Discrete changes are implemented as rSwitch in ballController, and continuous changes are
 -- implemented here.
 getVA :: Ball -> HardSF
-getVA b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r) = proc inp@(ginp, pi@(P (V2 pxi pyi)), vi@(V2 vxi vyi), ai@(V2 axi ayi), rolling) -> do
+getVA b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) = proc inp@(ginp, pi@(P (V2 pxi pyi)), vi@(V2 vxi vyi), ai@(V2 axi ayi), rolling) -> do
             -- for now, I haven't modelled any kind of horizontal accelerations other than friction. If we're rolling and our horizontal velocity is very low,
             -- we should stop. If we're just rolling, we use given acceleration. Otherwise we have no horizontal acceleration and our X velocity doesn't
             -- change.
