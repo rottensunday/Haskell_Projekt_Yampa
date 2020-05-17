@@ -27,6 +27,9 @@ dependencies:
 - sdl2-ttf
 - text
 - simple-affine-space
+- htiled
+- containers
+- mtl
 
 library:
   source-dirs: src

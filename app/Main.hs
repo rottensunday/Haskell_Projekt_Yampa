@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
 import FRP.Yampa
@@ -11,16 +12,17 @@ import SDL (($=), Point(..), Rectangle)
 import Data.Word
 import Data.Text(Text(..), pack)
 import Data.Vector3
+import Control.Monad.Trans
+import qualified Data.Map.Strict as Map
 import qualified SDL
 import qualified SDL.Font as SFont
 import FRP.Yampa.Delays
 import Control.Applicative
+import Data.Tiled
 
 import Parser
 import Types
 import Update
-
-data Texture = Texture SDL.Texture (V2 CInt)
 
 initScreenWidth, initScreenHeight :: CInt
 (initScreenWidth, initScreenHeight) = (1280, 960)
@@ -71,6 +73,18 @@ renderTexture r (Texture t size) xy clip =
   let dstSize = maybe size (\(SDL.Rectangle _ size') ->  size') clip
   in SDL.copy r t clip (Just (SDL.Rectangle xy dstSize))
 
+prepareGidsToObjsMap :: GidsToObjsMap
+prepareGidsToObjsMap = Map.fromList [(1, GameObj Player ballClip), (2, GameObj Wall wallClip)]
+
+prepareStaticObjsMap :: FilePath -> IO StaticObjsMap
+prepareStaticObjsMap file = do
+  board <- loadMapFile file
+  let gidsObjsMap = prepareGidsToObjsMap
+      tileMap = Map.map (\tile -> gidsObjsMap Map.! tileGid tile) $ (layerData . head . mapLayers) board
+  return tileMap
+
+
+
 main :: IO ()
 main = do
   SDL.initializeAll
@@ -97,10 +111,11 @@ main = do
         }
 
   spriteSheetTexture <- loadTexture renderer "D:/NAUKA/Haskell/Projekt/Testy/TestStack/SDL2Yampa1/sdlyampa/resources/sheet1.bmp"
+  staticObjs <- prepareStaticObjsMap "../../../../resources/map1.tmx"
 
   reactimate parseInput
     (\_ -> threadDelay 10000 >> parseInput >>= (\gi -> return (0.1, Just gi)))
-    (\_ output -> appLoop renderer spriteSheetTexture font output)
+    (\_ output -> appLoop renderer spriteSheetTexture staticObjs font output)
     (ballController startBall startGameInfo)
 
   putStrLn "Koniec?"
@@ -111,8 +126,8 @@ main = do
 
 -- @(p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay)
 
-appLoop :: SDL.Renderer -> Texture -> SFont.Font -> GameOutput -> IO Bool
-appLoop renderer sheet font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) end) = do
+appLoop :: SDL.Renderer -> Texture -> StaticObjsMap -> SFont.Font -> GameOutput -> IO Bool
+appLoop renderer sheet objsMap font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) end) = do
   events <- SDL.pollEvents
   mousePos@(P mV2) <- SDL.getAbsoluteMouseLocation
   let textColor = V4 255 0 0 0
@@ -121,7 +136,10 @@ appLoop renderer sheet font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) v@(V2 vx
   SDL.clear renderer
   renderTexture renderer textTexture (P (V2 100 100)) Nothing
   renderTexture renderer sheet (SDL.P (V2 (round px) (round py))) (Just ballClip)
-  renderTexture renderer sheet (SDL.P (V2 608 928)) (Just wallClip)
+  sequence_ $ Map.foldlWithKey 
+              (\col (posx :: Int, posy :: Int) gameobj -> renderTexture renderer sheet (SDL.P (V2 ((fromIntegral posx :: CInt)*32) ((fromIntegral posy :: CInt)*32))) (Just $ textureCoords gameobj):col) 
+              [] 
+              objsMap
   SDL.rendererDrawColor renderer $= V4 255 255 255 255
   SDL.drawLine renderer (P (fmap round startDir)) (P (fmap round startDir + lineEnd mV2))
   SDL.present renderer

@@ -46,6 +46,12 @@ extra-deps:
 - sdl2-ttf-2.1.1
 - text-1.2.4.0
 - simple-affine-space-0.1.1
+- htiled-0.1.4.0
+- mtl-2.2.2
+- containers-0.5.11.0@sha256:28ad7337057442f75bc689315ab4ec7bdf5e6b2c39668f306672cecd82c02798,16685
+- binary-0.8.8.0@sha256:e9387a7ef2b34c6a23b09664c306e37cc01ae2cb4e4511a1c96ffb14008c24b0,6262
+- parsec-3.1.14.0@sha256:63a4555d6ea2aaccd8588fc809e5d137e72b668898ab3b171ce8458b792f0f36,4356
+- Cabal-3.0.2.0@sha256:f45ee078a8529d1ad3993767345ac83304c7f2ff5eec02c455a1dc200ad22c67,26714
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

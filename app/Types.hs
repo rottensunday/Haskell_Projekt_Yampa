@@ -11,6 +11,7 @@ import SDL (($=), Point(..), Rectangle)
 import Data.Word
 import Data.Text(Text(..), pack)
 import Data.Vector3
+import Data.Map
 import qualified SDL
 import qualified SDL.Font as SFont
 import FRP.Yampa.Delays
@@ -19,6 +20,8 @@ type BallSF = SF GameInput GameOutput
 
 type WinInput = Event SDL.Event
 
+data Texture = Texture SDL.Texture (V2 CInt)
+
 data Ball = Ball {
   position :: Point V2 Double,
   velocity :: V2 Double,
@@ -26,6 +29,17 @@ data Ball = Ball {
   radius :: Double,
   power :: Double
 }
+
+data GameObjType = Player | Wall | Spikes | Goal
+
+data GameObj = GameObj {
+  objType :: GameObjType,
+  textureCoords :: SDL.Rectangle CInt
+}
+
+type GidsToObjsMap = Map Word32 GameObj -- map from tilemap Gids to game objects with corresponding textures
+
+type StaticObjsMap = Map (Int, Int) GameObj -- map from positions to gameobjs which should be drawn in corresponding chunks
 
 data GameOutput = GameOutput {
   ball :: Ball,

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 68c73dcf30c2449b601f4d9cc4e4034c1f1522135fb51b083e0884147f67d545
+-- hash: f4561c30c82e6a4a627b95bd830c122e7d64e83ab841a9d40834a4bbe6f3d87e
 
 name:           sdlyampa
 version:        0.1.0.0
@@ -33,9 +33,13 @@ library
   hs-source-dirs:
       src
   build-depends:
-      Yampa
+      SG
+    , Yampa
     , base >=4.7 && <5
+    , containers
+    , htiled
     , linear
+    , mtl
     , sdl2
     , sdl2-ttf
     , simple-affine-space
@@ -53,9 +57,13 @@ executable sdlyampa-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      Yampa
+      SG
+    , Yampa
     , base >=4.7 && <5
+    , containers
+    , htiled
     , linear
+    , mtl
     , sdl2
     , sdl2-ttf
     , sdlyampa
@@ -72,9 +80,13 @@ test-suite sdlyampa-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      Yampa
+      SG
+    , Yampa
     , base >=4.7 && <5
+    , containers
+    , htiled
     , linear
+    , mtl
     , sdl2
     , sdl2-ttf
     , sdlyampa
