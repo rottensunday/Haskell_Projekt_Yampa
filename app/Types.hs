@@ -50,7 +50,8 @@ data GameInfo = GameInfo {
   screenWidth :: CInt,
   screenHeight :: CInt,
   tileWidth :: CInt,
-  tileHeight :: CInt
+  tileHeight :: CInt,
+  objsMap :: StaticObjsMap
 }
 
 data GameInput = GameInput {
@@ -64,4 +65,4 @@ data GameInput = GameInput {
 
 type HardSF = SF (GameInput, Point V2 Double, V2 Double, V2 Double, Bool) (V2 Double, V2 Double)
 
-data HitDir = LeftSide | RightSide | UpSide | DownSide
+data HitDir = LeftSide | RightSide | UpSide | DownSide | LeftUpSide | RightUpSide | LeftDownSide | RightDownSide

@@ -35,19 +35,14 @@ ballClip = SDL.Rectangle (SDL.P (V2 0 0)) spriteSize
 wallClip = SDL.Rectangle (SDL.P (V2 initTileWidth 0)) spriteSize
 
 startBall = Ball {
-  position = P (V2 640 0),
+  position = P (V2 657 0),
   velocity = V2 0 0,
-  acceleration = V2 0 4.9,
-  radius = 10,
+  acceleration = V2 0 20,
+  radius = 13,
   power = 10
 }
 
-startGameInfo = GameInfo {
-  screenWidth = initScreenWidth,
-  screenHeight = initScreenHeight,
-  tileWidth = initTileWidth,
-  tileHeight = initTileHeight
-}
+
 
 loadTexture :: SDL.Renderer -> FilePath -> IO Texture
 loadTexture r filePath = do
@@ -112,11 +107,19 @@ main = do
 
   spriteSheetTexture <- loadTexture renderer "D:/NAUKA/Haskell/Projekt/Testy/TestStack/SDL2Yampa1/sdlyampa/resources/sheet1.bmp"
   staticObjs <- prepareStaticObjsMap "../../../../resources/map1.tmx"
-
+-- threadDelay 1000 >> 
+--threadDelay 5000 >> 
   reactimate parseInput
-    (\_ -> threadDelay 10000 >> parseInput >>= (\gi -> return (0.1, Just gi)))
+    (\_ -> parseInput >>= (\gi -> return (0.01, Just gi)))
     (\_ output -> appLoop renderer spriteSheetTexture staticObjs font output)
-    (ballController startBall startGameInfo)
+    (ballController startBall GameInfo {
+                              screenWidth = initScreenWidth,
+                              screenHeight = initScreenHeight,
+                              tileWidth = initTileWidth,
+                              tileHeight = initTileHeight,
+                              objsMap = staticObjs
+                              } 
+    )
 
   putStrLn "Koniec?"
   SDL.destroyRenderer renderer
@@ -135,7 +138,7 @@ appLoop renderer sheet objsMap font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) 
   SDL.rendererDrawColor renderer $= V4 0 0 0 0
   SDL.clear renderer
   renderTexture renderer textTexture (P (V2 100 100)) Nothing
-  renderTexture renderer sheet (SDL.P (V2 (round px) (round py))) (Just ballClip)
+  renderTexture renderer sheet (SDL.P (V2 (round px-20) (round py-20))) (Just ballClip)
   sequence_ $ Map.foldlWithKey 
               (\col (posx :: Int, posy :: Int) gameobj -> renderTexture renderer sheet (SDL.P (V2 ((fromIntegral posx :: CInt)*32) ((fromIntegral posy :: CInt)*32))) (Just $ textureCoords gameobj):col) 
               [] 
@@ -145,7 +148,7 @@ appLoop renderer sheet objsMap font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) 
   SDL.present renderer
   return end
     where
-      startDir = pV2 + V2 r r
+      startDir = pV2
       dir :: V2 CInt -> V2 Double
       dir mV2 = Linear.Metric.normalize (fmap fromIntegral mV2 - pV2)
       lineEnd :: V2 CInt -> V2 CInt
