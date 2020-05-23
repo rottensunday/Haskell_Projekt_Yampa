@@ -20,7 +20,10 @@ type BallSF = SF GameInput GameOutput
 
 type WinInput = Event SDL.Event
 
-data Texture = Texture SDL.Texture (V2 CInt)
+data Texture = Texture {
+  texture :: SDL.Texture,
+  size :: V2 CInt
+}
 
 data Ball = Ball {
   position :: Point V2 Double,
@@ -30,7 +33,7 @@ data Ball = Ball {
   power :: Double
 }
 
-data GameObjType = Player | Wall | Spikes | Goal
+data GameObjType = Player | Wall | Spikes | Goal deriving Eq
 
 data GameObj = GameObj {
   objType :: GameObjType,

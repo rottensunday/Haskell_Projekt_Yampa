@@ -22,6 +22,7 @@ import FRP.Yampa.Delays
 
 import Parser
 import Types
+import Utility
 
 headMaybe :: [a] -> Maybe a
 headMaybe [] = Nothing
@@ -99,39 +100,42 @@ powerCalc acc start = switch (calc) (\cont -> powerCalc (-acc) cont)
 
 ballController :: Ball -> GameInfo -> BallSF
 ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow)
-             gi@(GameInfo sWidth sHeight tWidth tHeight objs) = proc input -> do
-              lmbReleased <- mouseEventReleasedParser -< input -- determine whether we released LMButton
-              qClicked <- qClickParser >>> arr (isEvent) -< input
-              -- we have to use delayed switch so jumpPower isn't set to 0 after LMB release. If this happens, we can't really use it to shoot our ball.
-              jumpPower <- drSwitch (mousePressedParser >>> powerCalc 30 0) -< (input, lmbReleased `tag` (mousePressedParser >>> powerCalc 30 0))
-              mPos <- mousePosParser -< input -- determine mouse position
-
-              rec velModClick <- clickSpeedModifier -< (lmbReleased `tag` (mPos, P (V2 posX posY), speed, acc, a, rolling, jumpPower)) -- clicking a button changes our velocity
-                  -- hitting an edge may change our velocity and acceleration. If we hit a floor and our velocity is very low, we start rolling on the ground.
-                  -- (isGroundHit, rolling) <- fby (NoEvent, False) edgeHitCheck -< (V2 posX posY, speed, rolling, gi) 
-                  (collisionEvent, rolling) <- fby (NoEvent, False) (collisionChecker objs) -< (P (V2 posX posY), speed, r)
-                  -- hitting an edge may change our velocity and acceleration
-                  -- velModHit <- hitSAModifier -< (isGroundHit `attach` (mPos, P (V2 posX posY), speed, acc, a, rolling))
-                  velModHit <- hitSAModifier2 -< (collisionEvent `attach` (mPos, P (V2 posX posY), speed, acc, a, rolling))
-                  -- every time we have click or edge hit event, we switch our speed-determining SF to a new one,
-                  -- so it can make its calculation based on new parameters. We provide a parameter for this SF with a "getTag" function,
-                  -- which processes click/edge hit events modified values and makes a new ball.
-                  (speed@(V2 speedX speedY), acc@(V2 accX accY)) <- fby (V2 0.0 0.0, V2 0.0 0.0) (rSwitch (getVA b)) -< ((input, P (V2 posX posY), speed, acc, rolling),
-                                                                                          lMerge lmbReleased (collisionEvent `tag` ()) `tag` getVA (getTag lmbReleased (collisionEvent `tag` ()) velModClick velModHit (P (V2 posX posY)) speed acc r rolling))
-                  posX <- iPre 0 >>> integral >>^ (+px) -< speedX
-                  posY <- iPre 0 >>> integral >>^ (+py) -< speedY
-
-              returnA -< GameOutput {
-                          ball = Ball {
-                            position = P (V2 posX posY),
-                            velocity = speed,
-                            acceleration = acc,
-                            radius = r,
-                            power = jumpPower
-                          },
-                          shouldEnd = qClicked
-                       } 
+             gi@(GameInfo sWidth sHeight tWidth tHeight objs) = switch (controller) (\_ -> (ballController b gi))
               where
+                controller :: SF GameInput (GameOutput, Event ())
+                controller = proc input -> do
+                  lmbReleased <- mouseEventReleasedParser -< input -- determine whether we released LMButton
+                  qClicked <- qClickParser >>> arr (isEvent) -< input
+                  -- we have to use delayed switch so jumpPower isn't set to 0 after LMB release. If this happens, we can't really use it to shoot our ball.
+                  jumpPower <- drSwitch (mousePressedParser >>> powerCalc 30 0) -< (input, lmbReleased `tag` (mousePressedParser >>> powerCalc 30 0))
+                  mPos <- mousePosParser -< input -- determine mouse position
+
+                  rec velModClick <- clickSpeedModifier -< (lmbReleased `tag` (mPos, P (V2 posX posY), speed, acc, a, rolling, jumpPower)) -- clicking a button changes our velocity
+                      -- hitting an edge may change our velocity and acceleration. If we hit a floor and our velocity is very low, we start rolling on the ground.
+                      -- (isGroundHit, rolling) <- fby (NoEvent, False) edgeHitCheck -< (V2 posX posY, speed, rolling, gi) 
+                      (collisionEvent, rolling) <- fby (NoEvent, False) (collisionChecker objs) -< (P (V2 posX posY), speed, r)
+                      -- hitting an edge may change our velocity and acceleration
+                      -- velModHit <- hitSAModifier -< (isGroundHit `attach` (mPos, P (V2 posX posY), speed, acc, a, rolling))
+                      velModHit <- hitSAModifier2 -< (collisionEvent `attach` (mPos, P (V2 posX posY), speed, acc, a, rolling))
+                      -- every time we have click or edge hit event, we switch our speed-determining SF to a new one,
+                      -- so it can make its calculation based on new parameters. We provide a parameter for this SF with a "getTag" function,
+                      -- which processes click/edge hit events modified values and makes a new ball.
+                      (speed@(V2 speedX speedY), acc@(V2 accX accY)) <- fby (V2 0.0 0.0, V2 0.0 0.0) (rSwitch (getVA b)) -< ((input, P (V2 posX posY), speed, acc, rolling),
+                                                                                              lMerge lmbReleased (collisionEvent `tag` ()) `tag` getVA (getTag lmbReleased (collisionEvent `tag` ()) velModClick velModHit (P (V2 posX posY)) speed acc r rolling))
+                      posX <- iPre 0 >>> integral >>^ (+px) -< speedX
+                      posY <- iPre 0 >>> integral >>^ (+py) -< speedY
+                      eventLose <- verifyLoseCondition -< collisionEvent
+
+                  returnA -< (GameOutput {
+                              ball = Ball {
+                                position = P (V2 posX posY),
+                                velocity = speed,
+                                acceleration = acc,
+                                radius = r,
+                                power = jumpPower
+                              },
+                              shouldEnd = qClicked
+                          }, eventLose)
                 -- getTag (clickEvent) (hitEvent) (clickEventModifiers) (hitEventModifiers) (position) (speed) (acceleration) (radius) (isRolling)
                 getTag :: Event () -> Event () -> V2 Double -> (V2 Double, V2 Double) -> Point V2 Double -> V2 Double -> V2 Double -> Double -> Bool -> Ball
                 getTag NoEvent NoEvent _ _ _ _ _ _ _ = undefined -- this cannot be called
@@ -189,65 +193,76 @@ edgeHitCheck = proc input@(V2 px py, v@(V2 vx vy), rolling, gi) -> do
     checkRolling :: Bool -> V2 Double -> Bool
     checkRolling cond v@(V2 vx vy) = if cond && (abs vy <= 10.0) then True else False
 
+verifyLoseCondition :: SF (Event (GameObjType, HitDir)) (Event ())
+verifyLoseCondition = proc input -> do
+  case input of
+    NoEvent -> returnA -< NoEvent
+    Event (Spikes, _) -> returnA -< Event ()
+    _ -> returnA -< NoEvent
+
+filterFarObjectsSF :: SF (StaticObjsMap, Point V2 Int) StaticObjsMap
+filterFarObjectsSF = proc input@(objs, p) -> do
+  returnA -< filterFarObjects objs p
 
 collisionChecker :: StaticObjsMap -> SF (Point V2 Double, V2 Double, Double) (Event (GameObjType, HitDir), Bool)
 collisionChecker objsMap = proc input@(p@(P (V2 px py)), v@(V2 vx vy), r) -> do
-  leftHit <- edgeJust -< checkLeftHit p r
-  rightHit <- edgeJust -< checkRightHit p r
-  upHit <- edgeJust -< checkUpHit p r
-  downHit <- edgeJust -< checkDownHit p r
-  leftUpHit <- edgeJust -< checkLeftUpHit p r
-  rightUpHit <- edgeJust -< checkRightUpHit p r
-  leftDownHit <- edgeJust -< checkLeftDownHit p r
-  rightDownHit <- edgeJust -< checkRightDownHit p r
+  filteredObjs <- filterFarObjectsSF -< (objsMap, fmap round p)
+  leftHit <- edgeJust -< checkLeftHit p r filteredObjs
+  rightHit <- edgeJust -< checkRightHit p r filteredObjs
+  upHit <- edgeJust -< checkUpHit p r filteredObjs
+  downHit <- edgeJust -< checkDownHit p r filteredObjs
+  leftUpHit <- edgeJust -< checkLeftUpHit p r filteredObjs
+  rightUpHit <- edgeJust -< checkRightUpHit p r filteredObjs
+  leftDownHit <- edgeJust -< checkLeftDownHit p r filteredObjs
+  rightDownHit <- edgeJust -< checkRightDownHit p r filteredObjs
   returnA -< (mergeEvents [downHit `attach` DownSide,
                           rightHit `attach` RightSide, leftHit `attach` LeftSide, upHit `attach` UpSide,
                           leftUpHit `attach` LeftUpSide, rightUpHit `attach` RightUpSide,
                           leftDownHit `attach` LeftDownSide, rightDownHit `attach` RightDownSide], 
-                          ((isJust $ checkUpHit p r) || (isJust $ checkLeftUpHit p r) || (isJust $ checkRightUpHit p r)) && (abs vy <= 10))
+                          ((isJust $ checkUpHit p r filteredObjs) || (isJust $ checkLeftUpHit p r filteredObjs) || (isJust $ checkRightUpHit p r filteredObjs)) && (abs vy <= 10))
   where
     aggreg val = fmap objType $ headMaybe $ Map.elems val 
-    checkLeftHit :: Point V2 Double -> Double -> Maybe GameObjType
-    checkLeftHit p@(P (V2 px py)) radius = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
+    checkLeftHit :: Point V2 Double -> Double -> StaticObjsMap -> Maybe GameObjType
+    checkLeftHit p@(P (V2 px py)) radius filteredObjs = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
                                                                       [px < fromIntegral cpx*32,
                                                                       py > fromIntegral cpy*32,
                                                                       py < fromIntegral (cpy*32 + 32),
-                                                                      radius > (fromIntegral cpx*32 - px)]) objsMap
-    checkRightHit :: Point V2 Double -> Double -> Maybe GameObjType
-    checkRightHit p@(P (V2 px py)) radius = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
+                                                                      radius > (fromIntegral cpx*32 - px)]) filteredObjs
+    checkRightHit :: Point V2 Double -> Double -> StaticObjsMap -> Maybe GameObjType
+    checkRightHit p@(P (V2 px py)) radius filteredObjs = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
                                                                       [px > fromIntegral (cpx*32 + 32),
                                                                       py > fromIntegral cpy*32,
                                                                       py < fromIntegral (cpy*32 + 32),
-                                                                      radius > (px - fromIntegral (cpx*32 + 32))]) objsMap
-    checkUpHit :: Point V2 Double -> Double -> Maybe GameObjType
-    checkUpHit p@(P (V2 px py)) radius = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
+                                                                      radius > (px - fromIntegral (cpx*32 + 32))]) filteredObjs
+    checkUpHit :: Point V2 Double -> Double -> StaticObjsMap -> Maybe GameObjType
+    checkUpHit p@(P (V2 px py)) radius filteredObjs = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
                                                                       [py <= fromIntegral cpy*32,
                                                                       px >= fromIntegral cpx*32,
                                                                       px <= fromIntegral (cpx*32 + 32),
-                                                                      radius > (fromIntegral cpy*32 - py)]) objsMap
-    checkDownHit :: Point V2 Double -> Double -> Maybe GameObjType
-    checkDownHit p@(P (V2 px py)) radius = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
+                                                                      radius > (fromIntegral cpy*32 - py)]) filteredObjs
+    checkDownHit :: Point V2 Double -> Double -> StaticObjsMap -> Maybe GameObjType
+    checkDownHit p@(P (V2 px py)) radius filteredObjs = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
                                                                       [py > fromIntegral (cpy*32 + 32),
                                                                       px > fromIntegral cpx*32,
                                                                       px < fromIntegral (cpx*32 + 32),
-                                                                      radius > (py - fromIntegral (cpy*32 + 32))]) objsMap
-    checkLeftUpHit :: Point V2 Double -> Double -> Maybe GameObjType
-    checkLeftUpHit p@(P (V2 px py)) radius = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
+                                                                      radius > (py - fromIntegral (cpy*32 + 32))]) filteredObjs
+    checkLeftUpHit :: Point V2 Double -> Double -> StaticObjsMap -> Maybe GameObjType
+    checkLeftUpHit p@(P (V2 px py)) radius filteredObjs = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
                                                                       [py < fromIntegral cpy*32,
                                                                       px < fromIntegral cpx*32,
-                                                                      radius > sqrt ((fromIntegral cpy*32 - py)^2 + (fromIntegral cpx*32 - px)^2)]) objsMap
-    checkRightUpHit :: Point V2 Double -> Double -> Maybe GameObjType
-    checkRightUpHit p@(P (V2 px py)) radius = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
+                                                                      radius > sqrt ((fromIntegral cpy*32 - py)^2 + (fromIntegral cpx*32 - px)^2)]) filteredObjs
+    checkRightUpHit :: Point V2 Double -> Double -> StaticObjsMap -> Maybe GameObjType
+    checkRightUpHit p@(P (V2 px py)) radius filteredObjs = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
                                                                       [py < fromIntegral cpy*32,
                                                                       px > fromIntegral (cpx*32 + 32),
-                                                                      radius > sqrt ((fromIntegral cpy*32 - py)^2 + (px - fromIntegral (cpx*32 + 32))^2)]) objsMap
-    checkLeftDownHit :: Point V2 Double -> Double -> Maybe GameObjType
-    checkLeftDownHit p@(P (V2 px py)) radius = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
+                                                                      radius > sqrt ((fromIntegral cpy*32 - py)^2 + (px - fromIntegral (cpx*32 + 32))^2)]) filteredObjs
+    checkLeftDownHit :: Point V2 Double -> Double -> StaticObjsMap -> Maybe GameObjType
+    checkLeftDownHit p@(P (V2 px py)) radius filteredObjs = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
                                                                       [py > fromIntegral (cpy*32 + 32),
                                                                       px < fromIntegral cpx*32,
-                                                                      radius > sqrt ((py - fromIntegral (cpy*32 + 32))^2 + (fromIntegral cpx*32 - px)^2)]) objsMap
-    checkRightDownHit :: Point V2 Double -> Double -> Maybe GameObjType
-    checkRightDownHit p@(P (V2 px py)) radius = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
+                                                                      radius > sqrt ((py - fromIntegral (cpy*32 + 32))^2 + (fromIntegral cpx*32 - px)^2)]) filteredObjs
+    checkRightDownHit :: Point V2 Double -> Double -> StaticObjsMap -> Maybe GameObjType
+    checkRightDownHit p@(P (V2 px py)) radius filteredObjs = aggreg $ Map.filterWithKey (\(cpx :: Int, cpy :: Int) go -> all (== True) 
                                                                       [py > fromIntegral (cpy*32 + 32),
                                                                       px > fromIntegral (cpx*32 + 32),
-                                                                      radius > sqrt ((py - fromIntegral (cpy*32 + 32))^2 + (px - fromIntegral (cpx*32 + 32))^2)]) objsMap
+                                                                      radius > sqrt ((py - fromIntegral (cpy*32 + 32))^2 + (px - fromIntegral (cpx*32 + 32))^2)]) filteredObjs

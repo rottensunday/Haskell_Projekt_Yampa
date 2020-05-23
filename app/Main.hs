@@ -33,6 +33,7 @@ initTileWidth, initTileHeight :: CInt
 spriteSize = V2 initTileWidth initTileHeight
 ballClip = SDL.Rectangle (SDL.P (V2 0 0)) spriteSize
 wallClip = SDL.Rectangle (SDL.P (V2 initTileWidth 0)) spriteSize
+spikeClip = SDL.Rectangle (SDL.P (V2 0 initTileHeight)) spriteSize
 
 startBall = Ball {
   position = P (V2 657 0),
@@ -69,7 +70,7 @@ renderTexture r (Texture t size) xy clip =
   in SDL.copy r t clip (Just (SDL.Rectangle xy dstSize))
 
 prepareGidsToObjsMap :: GidsToObjsMap
-prepareGidsToObjsMap = Map.fromList [(1, GameObj Player ballClip), (2, GameObj Wall wallClip)]
+prepareGidsToObjsMap = Map.fromList [(1, GameObj Player ballClip), (2, GameObj Wall wallClip), (3, GameObj Spikes spikeClip)]
 
 prepareStaticObjsMap :: FilePath -> IO StaticObjsMap
 prepareStaticObjsMap file = do
@@ -105,7 +106,7 @@ main = do
         , SDL.rendererTargetTexture = False
         }
 
-  spriteSheetTexture <- loadTexture renderer "D:/NAUKA/Haskell/Projekt/Testy/TestStack/SDL2Yampa1/sdlyampa/resources/sheet1.bmp"
+  spriteSheetTexture <- loadTexture renderer "D:/NAUKA/Haskell/Projekt/Testy/TestStack/SDL2Yampa1/sdlyampa/resources/sheet2.bmp"
   staticObjs <- prepareStaticObjsMap "../../../../resources/map1.tmx"
 -- threadDelay 1000 >> 
 --threadDelay 5000 >> 
@@ -138,6 +139,7 @@ appLoop renderer sheet objsMap font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) 
   SDL.rendererDrawColor renderer $= V4 0 0 0 0
   SDL.clear renderer
   renderTexture renderer textTexture (P (V2 100 100)) Nothing
+  SDL.destroyTexture $ texture textTexture
   renderTexture renderer sheet (SDL.P (V2 (round px-20) (round py-20))) (Just ballClip)
   sequence_ $ Map.foldlWithKey 
               (\col (posx :: Int, posy :: Int) gameobj -> renderTexture renderer sheet (SDL.P (V2 ((fromIntegral posx :: CInt)*32) ((fromIntegral posy :: CInt)*32))) (Just $ textureCoords gameobj):col) 

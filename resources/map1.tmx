@@ -3,12 +3,12 @@
  <editorsettings>
   <export target="test1..tmx" format="tmx"/>
  </editorsettings>
- <tileset firstgid="1" name="sheet1" tilewidth="32" tileheight="32" tilecount="4" columns="2">
-  <image source="../../../../../../../../Dokumenty/Aseprite/sheet1.bmp" trans="000000" width="64" height="64"/>
+ <tileset firstgid="1" name="sheep1" tilewidth="32" tileheight="32" tilecount="4" columns="2">
+  <image source="../../../../../../../../Dokumenty/Aseprite/sheep1.bmp" trans="000000" width="64" height="64"/>
  </tileset>
  <layer id="1" name="Warstwa Kafelków 1" width="40" height="30">
   <data encoding="base64" compression="zlib">
-   eJztlkEKADAIw4r/f/ResDFQoUoCgqcS9FIJAABAisu+nXjMJir/634b/HLgtxP3u03zc/PFL5c5wa+7o1Rm4ueT1ZH56s6Z+eEAJrYAfQ==
+   eJzt0ksKACAMQ0HR+99Z3IsWG3/lDXRXQpSmBAAAAPTlydz2Q7+XRepn3VW+ebXfqbuN+n+qTGUW/XxZ9PNltd1iGHW/HTNSAVmaALA=
   </data>
  </layer>
 </map>

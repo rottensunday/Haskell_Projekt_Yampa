@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d25cd4a431a6e8f62912fb71684b6d680981a0eef7b4478dd2bbdf8aa06c0e32
+-- hash: 10dcf9d13f9accd51956866fafca742fd6ecead98375f827f19da3e494bea271
 
 name:           sdlyampa
 version:        0.1.0.0
@@ -51,6 +51,7 @@ executable sdlyampa-exe
       Parser
       Types
       Update
+      Utility
       Paths_sdlyampa
   hs-source-dirs:
       app
