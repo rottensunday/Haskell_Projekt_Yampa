@@ -9,6 +9,7 @@ import Foreign.C.Types
 import SDL (($=), Point(..), Rectangle)
 import qualified SDL
 import GHC.IO.Encoding
+import Data.Time.Clock.POSIX (getPOSIXTime)
 
 import Types
 
@@ -42,6 +43,10 @@ mouseEventPressedParser = proc gi -> do
 mouseEventReleasedParser :: SF GameInput (Event ())
 mouseEventReleasedParser = proc gi -> do
   returnA -< mEventReleased gi
+
+timeParser :: SF GameInput Integer
+timeParser = proc gi -> do
+  returnA -< currTimeIn gi
   
 
 parseInput :: IO GameInput
@@ -70,10 +75,11 @@ parseInput = do
       qPressed = any eventIsQPress events
       lmbPressed = any eventIsButtonPressed events
       lmbReleased = any eventIsButtonReleased events
-
+  inTime <- round . (*1000000) <$> getPOSIXTime
   return GameInput { mPressed = checkBtn SDL.ButtonLeft, 
                     mEventPressed = if lmbPressed then Event () else NoEvent,
                     mEventReleased = if lmbReleased then Event () else NoEvent,
                     mPos = mousePos, 
                     qClick = if qPressed then Event () else NoEvent,
-                    mClick = if lmbReleased then Event () else NoEvent } -- this is legacy option
+                    mClick = if lmbReleased then Event () else NoEvent,-- this is legacy option
+                    currTimeIn = inTime } 

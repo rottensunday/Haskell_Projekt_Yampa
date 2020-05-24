@@ -3,12 +3,12 @@
  <editorsettings>
   <export target="test1..tmx" format="tmx"/>
  </editorsettings>
- <tileset firstgid="1" name="sheep1" tilewidth="32" tileheight="32" tilecount="4" columns="2">
-  <image source="../../../../../../../../Dokumenty/Aseprite/sheep1.bmp" trans="000000" width="64" height="64"/>
+ <tileset firstgid="1" name="sheep2" tilewidth="32" tileheight="32" tilecount="4" columns="2">
+  <image source="../../../../../../../../Dokumenty/Aseprite/sheep2.bmp" trans="000000" width="64" height="64"/>
  </tileset>
  <layer id="1" name="Warstwa Kafelków 1" width="40" height="30">
   <data encoding="base64" compression="zlib">
-   eJzt0ksKACAMQ0HR+99Z3IsWG3/lDXRXQpSmBAAAAPTlydz2Q7+XRepn3VW+ebXfqbuN+n+qTGUW/XxZ9PNltd1iGHW/HTNSAVmaALA=
+   eJztl90KgDAIhaP2/s8cXQQLzvxJpy46INTKzrehtbZtnvYuKmolPhTZoniq8rXumrcaf8tD3PpVW8PReGaNWrw8+Lh5Z/Nxz0V8BxEV+KT1hvjQPPrx0Vw1fFKhHGlfUX4V6u8rfPf5FVRNaD0sudS72MtjRm40n6TXLX5WPm2fR/K98eBqNmt/gI7RfZX5srQan7bnZ0u6b/HodytfZG6Ex8/nw0f9D1hD8x1EcQKM0wIT
   </data>
  </layer>
 </map>

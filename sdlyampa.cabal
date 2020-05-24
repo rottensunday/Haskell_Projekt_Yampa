@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 10dcf9d13f9accd51956866fafca742fd6ecead98375f827f19da3e494bea271
+-- hash: 606ff8dfe3f37159e09f0283ee4c4f62b36a39e8959771dbf130512e0ffd29ee
 
 name:           sdlyampa
 version:        0.1.0.0
@@ -37,12 +37,14 @@ library
     , base >=4.7 && <5
     , containers
     , htiled
+    , lens
     , linear
     , mtl
     , sdl2
     , sdl2-ttf
     , simple-affine-space
     , text
+    , time
   default-language: Haskell2010
 
 executable sdlyampa-exe
@@ -61,6 +63,7 @@ executable sdlyampa-exe
     , base >=4.7 && <5
     , containers
     , htiled
+    , lens
     , linear
     , mtl
     , sdl2
@@ -68,6 +71,7 @@ executable sdlyampa-exe
     , sdlyampa
     , simple-affine-space
     , text
+    , time
   default-language: Haskell2010
 
 test-suite sdlyampa-test
@@ -83,6 +87,7 @@ test-suite sdlyampa-test
     , base >=4.7 && <5
     , containers
     , htiled
+    , lens
     , linear
     , mtl
     , sdl2
@@ -90,4 +95,5 @@ test-suite sdlyampa-test
     , sdlyampa
     , simple-affine-space
     , text
+    , time
   default-language: Haskell2010

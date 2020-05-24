@@ -46,7 +46,10 @@ type StaticObjsMap = Map (Int, Int) GameObj -- map from positions to gameobjs wh
 
 data GameOutput = GameOutput {
   ball :: Ball,
-  shouldEnd :: Bool
+  shouldEnd :: Bool,
+  currTimeOut :: Integer,
+  nShots :: Int,
+  didWin :: Bool
 }
 
 data GameInfo = GameInfo {
@@ -63,7 +66,19 @@ data GameInput = GameInput {
   mEventReleased :: Event (), -- fires when LMB is released
   mPos :: Point V2 CInt,
   qClick :: Event (),
-  mClick :: Event ()
+  mClick :: Event (),
+  currTimeIn :: Integer
+}
+
+data CollisionEffect = CollisionEffect {
+  leftHitEffect :: Maybe GameObjType,
+  rightHitEffect :: Maybe GameObjType,
+  upHitEffect :: Maybe GameObjType,
+  downHitEffect :: Maybe GameObjType,
+  leftUpHitEffect :: Maybe GameObjType,
+  rightUpHitEffect :: Maybe GameObjType,
+  leftDownHitEffect :: Maybe GameObjType,
+  rightDownHitEffect :: Maybe GameObjType
 }
 
 type HardSF = SF (GameInput, Point V2 Double, V2 Double, V2 Double, Bool) (V2 Double, V2 Double)

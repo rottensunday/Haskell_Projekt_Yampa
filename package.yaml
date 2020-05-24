@@ -30,6 +30,8 @@ dependencies:
 - htiled
 - containers
 - mtl
+- time
+- lens
 
 library:
   source-dirs: src
