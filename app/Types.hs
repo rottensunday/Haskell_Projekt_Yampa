@@ -46,10 +46,10 @@ type StaticObjsMap = Map (Int, Int) GameObj -- map from positions to gameobjs wh
 
 data GameOutput = GameOutput {
   ball :: Ball,
-  shouldEnd :: Bool,
-  currTimeOut :: Integer,
-  nShots :: Int,
-  didWin :: Bool
+  shouldEnd :: Bool, -- did we click Q?
+  nShots :: Int, -- number of player shots
+  didWin :: Bool, -- did player win?
+  currTimeOut :: Integer -- pass start time to SDL
 }
 
 data GameInfo = GameInfo {
@@ -64,10 +64,9 @@ data GameInput = GameInput {
   mPressed :: Bool, -- checks whether LMB is pressed
   mEventPressed :: Event (), -- fires when LMB is pressed
   mEventReleased :: Event (), -- fires when LMB is released
-  mPos :: Point V2 CInt,
-  qClick :: Event (),
-  mClick :: Event (),
-  currTimeIn :: Integer
+  mPos :: Point V2 CInt, -- mouse position
+  qClick :: Event (), -- fires when Q is clicked (check whether game should end)
+  currTimeIn :: Integer -- passes start time to output
 }
 
 data CollisionEffect = CollisionEffect {

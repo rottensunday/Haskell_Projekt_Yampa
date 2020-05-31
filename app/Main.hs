@@ -44,7 +44,7 @@ startBall = Ball {
   velocity = V2 0 0,
   acceleration = V2 0 45,
   radius = 13,
-  power = 10
+  power = 60
 }
 
 
@@ -134,7 +134,7 @@ main = do
 -- @(p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay)
 
 appLoop :: SDL.Renderer -> Texture -> [Int] -> StaticObjsMap -> SFont.Font -> GameOutput -> IO Bool
-appLoop renderer sheet scores objsMap font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) end outtime nshots didwin) = do
+appLoop renderer sheet scores objsMap font go@(GameOutput b@(Ball p@(P pV2@(V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) end nshots didwin outtime) = do
   events <- SDL.pollEvents
   mousePos@(P mV2) <- SDL.getAbsoluteMouseLocation
   let textColor = V4 255 0 0 0

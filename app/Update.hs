@@ -58,16 +58,16 @@ hitSAModifier2 = proc input -> do
     Event ((Wall, RightSide), ((P mPos@(V2 mPosX mPosY)), (P pPos@(V2 pPosX pPosY)), v@(V2 vX vY), a@(V2 aX aY), aStart@(V2 aStartX aStartY), rolling)) ->
       returnA -< (V2 (vX * (-0.6)) vY, V2 (-aX) aY)
     Event ((Wall, LeftDownSide), ((P mPos@(V2 mPosX mPosY)), (P pPos@(V2 pPosX pPosY)), v@(V2 vX vY), a@(V2 aX aY), aStart@(V2 aStartX aStartY), rolling)) ->
-      returnA -< if vY >= 0 || rolling || ((abs vY) <= 10) then (v, a) else (V2 (-vX) (vY * (-0.6)), a)
+      returnA -< if rolling || ((abs vY) <= 10) then (v, a) else (V2 (-vX) (vY * (-0.6)), a)
       --returnA -< (v, a)
     Event ((Wall, RightDownSide), ((P mPos@(V2 mPosX mPosY)), (P pPos@(V2 pPosX pPosY)), v@(V2 vX vY), a@(V2 aX aY), aStart@(V2 aStartX aStartY), rolling)) ->
-      returnA -< if vY >= 0 || rolling || ((abs vY) <= 10) then (v, a) else (V2 (-vX) (vY * (-0.6)), a)
+      returnA -< if rolling || ((abs vY) <= 10) then (v, a) else (V2 (-vX) (vY * (-0.6)), a)
       --returnA -< (v, a)
     Event ((Wall, LeftUpSide), ((P mPos@(V2 mPosX mPosY)), (P pPos@(V2 pPosX pPosY)), v@(V2 vX vY), a@(V2 aX aY), aStart@(V2 aStartX aStartY), rolling)) ->
-      returnA -< if vY <= 0 || rolling || ((abs vY) <= 10) then (v, a) else (V2 (-vX) (vY * (-0.6)), a)
+      returnA -< if rolling || ((abs vY) <= 10) then (v, a) else (V2 (-vX) (vY * (-0.6)), a)
       --returnA -< (v, a)
     Event ((Wall, RightUpSide), ((P mPos@(V2 mPosX mPosY)), (P pPos@(V2 pPosX pPosY)), v@(V2 vX vY), a@(V2 aX aY), aStart@(V2 aStartX aStartY), rolling)) ->
-      returnA -< if vY <= 0 || rolling || ((abs vY) <= 10) then (v, a) else (V2 (-vX) (vY * (-0.6)), a)
+      returnA -< if rolling || ((abs vY) <= 10) then (v, a) else (V2 (-vX) (vY * (-0.6)), a)
       --returnA -< (v, a)
   where calculateXAcc vX
           | vX <= 0   = 1.5
@@ -81,7 +81,7 @@ powerCalc acc start = switch (calc) (\cont -> powerCalc (-acc) cont)
   where
     calc = proc input -> do
       rec should_switch <- edge -< val > 300 || val < 0
-          val <- iPre 0 >>> integral >>^ (+start) -< if input then acc else 0
+          val <- integral >>^ (+start) -< if input then acc else 0
       returnA -< (val, should_switch `tag` val)
 
 ballController :: Ball -> GameInfo -> BallSF
@@ -94,7 +94,7 @@ ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow)
                   nClicks <- accumHold 0 -< lmbReleased `tag` (\val -> val+1)
                   qClicked <- qClickParser >>> arr (isEvent) -< input
                   -- we have to use delayed switch so jumpPower isn't set to 0 after LMB release. If this happens, we can't really use it to shoot our ball.
-                  jumpPower <- drSwitch (mousePressedParser >>> powerCalc 60 0) -< (input, lmbReleased `tag` (mousePressedParser >>> powerCalc 60 0))
+                  jumpPower <- drSwitch (mousePressedParser >>> powerCalc pow 0) -< (input, lmbReleased `tag` (mousePressedParser >>> powerCalc pow 0))
                   mPos <- mousePosParser -< input -- determine mouse position
 
                   rec velModClick <- clickSpeedModifier -< (lmbReleased `tag` (mPos, P (V2 posX posY), speed, acc, a, rolling, jumpPower)) -- clicking a button changes our velocity

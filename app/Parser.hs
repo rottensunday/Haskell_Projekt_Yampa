@@ -24,9 +24,9 @@ intToDoubleConverter = proc gi@(P (V2 px py)) -> do
   posY <- arr fromIntegral -< py
   returnA -< P (V2 posX posY)
 
-mouseClickParser :: SF GameInput (Event ())
-mouseClickParser = proc gi -> do
-  returnA -< mClick gi
+--mouseClickParser :: SF GameInput (Event ())
+--mouseClickParser = proc gi -> do
+--  returnA -< mClick gi
 
 qClickParser :: SF GameInput (Event ())
 qClickParser = proc gi -> do
@@ -81,5 +81,4 @@ parseInput = do
                     mEventReleased = if lmbReleased then Event () else NoEvent,
                     mPos = mousePos, 
                     qClick = if qPressed then Event () else NoEvent,
-                    mClick = if lmbReleased then Event () else NoEvent,-- this is legacy option
                     currTimeIn = inTime } 
