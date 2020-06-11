@@ -1,3 +1,7 @@
+{-|
+Module      : Parser
+Description : Parse input
+-}
 {-# LANGUAGE Arrows #-}
 module Parser where
 
@@ -13,6 +17,7 @@ import Data.Time.Clock.POSIX (getPOSIXTime)
 
 import Types
 
+-- |Given GameInput, we get mouse position as a 2D Point
 mousePosParser :: SF GameInput (Point V2 Double)
 mousePosParser = proc gi -> do
   doublePos <- intToDoubleConverter -< mPos gi
@@ -24,31 +29,27 @@ intToDoubleConverter = proc gi@(P (V2 px py)) -> do
   posY <- arr fromIntegral -< py
   returnA -< P (V2 posX posY)
 
---mouseClickParser :: SF GameInput (Event ())
---mouseClickParser = proc gi -> do
---  returnA -< mClick gi
-
+-- |Given GameInput, we check whether Q button was clicked
 qClickParser :: SF GameInput (Event ())
-qClickParser = proc gi -> do
-  returnA -< qClick gi
+qClickParser = arr qClick
 
+-- |Given GameInput, we check whether LMB is pressed
 mousePressedParser :: SF GameInput Bool
-mousePressedParser = proc gi -> do
-  returnA -< mPressed gi
+mousePressedParser = arr mPressed
 
+-- |Given GameInput, we check whether LMB was just pressed
 mouseEventPressedParser :: SF GameInput (Event ())
-mouseEventPressedParser = proc gi -> do
-  returnA -< mEventPressed gi
+mouseEventPressedParser = arr mEventPressed
 
+-- |Given GameInput, we check whether LMB was just released
 mouseEventReleasedParser :: SF GameInput (Event ())
-mouseEventReleasedParser = proc gi -> do
-  returnA -< mEventReleased gi
+mouseEventReleasedParser = arr mEventReleased
 
+-- |Given GameInput, we get input time
 timeParser :: SF GameInput Integer
-timeParser = proc gi -> do
-  returnA -< currTimeIn gi
+timeParser = arr currTimeIn
   
-
+-- |Using SDL, we get all important inputs from user and create GameInput object
 parseInput :: IO GameInput
 parseInput = do
   events <- SDL.pollEvents
@@ -75,7 +76,7 @@ parseInput = do
       qPressed = any eventIsQPress events
       lmbPressed = any eventIsButtonPressed events
       lmbReleased = any eventIsButtonReleased events
-  inTime <- round . (*1000000) <$> getPOSIXTime
+  inTime <- round . (*1000000) <$> getPOSIXTime -- POSIX Time in microseconds
   return GameInput { mPressed = checkBtn SDL.ButtonLeft, 
                     mEventPressed = if lmbPressed then Event () else NoEvent,
                     mEventReleased = if lmbReleased then Event () else NoEvent,

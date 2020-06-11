@@ -1,10 +1,10 @@
 name:                sdlyampa
-version:             0.1.0.0
-github:              "githubuser/sdlyampa"
+version:             1.0.0.0
+github:              "https://github.com/rottensunday/Haskell_Projekt_Yampa"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2020 Author name here"
+author:              "Aleksander Wisniewski"
+maintainer:          "arnachimm@gmail.com"
+copyright:           "Aleksander Wisniewski"
 
 extra-source-files:
 - README.md
@@ -32,6 +32,8 @@ dependencies:
 - mtl
 - time
 - lens
+- directory
+- split
 
 library:
   source-dirs: src
