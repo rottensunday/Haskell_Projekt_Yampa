@@ -41,6 +41,7 @@ prepareStaticObjsMap :: (CInt, CInt)        -- ^ tileWidth and tileHeight
                     -> IO [ObjsMap]         -- ^ Collection of loaded ObjsMaps
 prepareStaticObjsMap gi mPath = do
   fileNames <- map (mPath ++) .
+                  L.sort .
                   filter (\file -> file /= "." && file /= "..") <$>
                   getDirectoryContents mPath
   mapM (prepareStaticObjsMapSingle gi) fileNames
@@ -52,12 +53,12 @@ prepareDynamicObjs :: Int ->
 prepareDynamicObjs n = return $ replicate n [DynamicGameObj (GameObj Wall wallClip) (P (V2 200 50)) HorizontalRight 20 200,
                              DynamicGameObj (GameObj Wall wallClip) (P (V2 200 50)) VerticalDown 20 200]
 
--- |Given directory where scores should be saved, this function creates missing files and
+-- |Given directory where maps are, this function creates missing scores files in current directory and
 -- returns list of paths to files with scores
 prepareScoresFiles :: FilePath              -- ^ Directory where scores should be stored
                   -> IO [FilePath]          -- ^ File paths of all scores files
 prepareScoresFiles mPath = do
-  fileNames <- map ((++ "wyniki.txt") . head . splitOn ".") . filter (\file -> file /= "." && file /= "..") <$> getDirectoryContents mPath
+  fileNames <- map ((++ "wyniki.txt") . head . splitOn ".") . L.sort . filter (\file -> file /= "." && file /= "..") <$> getDirectoryContents mPath
   currentDir <- getCurrentDirectory
-  mapM_ (\file -> withFile (currentDir ++ "/" ++ file) AppendMode (const $ pure ())) fileNames
+  mapM_ (\file -> withFile (currentDir ++ "/" ++ file) AppendMode (const $ pure ())) fileNames -- this should create score files which are not present
   return $ map (\file -> currentDir ++ "/" ++ file) fileNames

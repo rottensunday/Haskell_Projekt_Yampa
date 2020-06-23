@@ -4,11 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a7ab9c7978842c91a6875ef58bd3681e5e9973a4cfbdf0af40df47fcc9b5d73b
+-- hash: 288d43f78a4833ab7f44664a8b2d4374ca5f963c2d25fd185050812dd6aafae9
 
 name:           sdlyampa
 version:        1.0.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/sdlyampa#readme>
+description:    Opis tutaj: <https://github.com/rottensunday/Haskell_Projekt_Yampa/blob/master/README.md>
 homepage:       https://github.com/https://github.com/rottensunday/Haskell_Projekt_Yampa#readme
 bug-reports:    https://github.com/https://github.com/rottensunday/Haskell_Projekt_Yampa/issues
 author:         Aleksander Wisniewski

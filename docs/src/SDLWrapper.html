@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : SDLWrapper
+Description : Helper functions for SDL usage
+-}</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">SDLWrapper</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Linear</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Foreign.C.Types</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">SDL</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">($=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Point</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Rectangle</span></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">pack</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">SDL</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">SDL.Font</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SFont</span></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Parser.html"><span class="hs-identifier">Parser</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Types.html"><span class="hs-identifier">Types</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="GameController.html"><span class="hs-identifier">GameController</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- |Load a texture from file</span><span>
+</span><span id="line-21"></span><span class="annot"><a href="SDLWrapper.html#loadTexture"><span class="hs-identifier hs-type">loadTexture</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SDL.Renderer</span></span><span>
+</span><span id="line-22"></span><span>            </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span>         </span><span class="hs-comment">-- ^ BMP file path</span><span>
+</span><span id="line-23"></span><span>            </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Types.html#Texture"><span class="hs-identifier hs-type">Texture</span></a></span><span>       </span><span class="hs-comment">-- ^ Texture object to return. It's our wrapper around SDL Texture which also contains size of texture</span><span>
+</span><span id="line-24"></span><span id="loadTexture"><span class="annot"><span class="annottext">loadTexture :: Renderer -&gt; FilePath -&gt; IO Texture
+</span><a href="SDLWrapper.html#loadTexture"><span class="hs-identifier hs-var hs-var">loadTexture</span></a></span></span><span> </span><span id="local-6989586621679216346"><span class="annot"><span class="annottext">r :: Renderer
+</span><a href="#local-6989586621679216346"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span id="local-6989586621679216345"><span class="annot"><span class="annottext">filePath :: FilePath
+</span><a href="#local-6989586621679216345"><span class="hs-identifier hs-var">filePath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621679216344"><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216344"><span class="hs-identifier hs-var">surface</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; IO Surface
+forall (m :: * -&gt; *). MonadIO m =&gt; FilePath -&gt; m Surface
+</span><span class="hs-identifier hs-var">SDL.loadBMP</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679216345"><span class="hs-identifier hs-var">filePath</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621679216342"><span class="annot"><span class="annottext">V2 CInt
+</span><a href="#local-6989586621679216342"><span class="hs-identifier hs-var">size</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Surface -&gt; IO (V2 CInt)
+forall (m :: * -&gt; *). MonadIO m =&gt; Surface -&gt; m (V2 CInt)
+</span><span class="hs-identifier hs-var">SDL.surfaceDimensions</span></span><span> </span><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216344"><span class="hs-identifier hs-var">surface</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679216340"><span class="annot"><span class="annottext">key :: V4 Word8
+</span><a href="#local-6989586621679216340"><span class="hs-identifier hs-var hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; V4 Word8
+forall a. a -&gt; a -&gt; a -&gt; a -&gt; V4 a
+</span><span class="hs-identifier hs-var">V4</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Word8
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">maxBound</span></span><span> </span><span class="annot"><span class="annottext">Word8
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">maxBound</span></span><span> </span><span class="annot"><span class="annottext">Word8
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">maxBound</span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="annottext">Surface -&gt; StateVar (Maybe (V4 Word8))
+</span><span class="hs-identifier hs-var">SDL.surfaceColorKey</span></span><span> </span><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216344"><span class="hs-identifier hs-var">surface</span></a></span><span> </span><span class="annot"><span class="annottext">StateVar (Maybe (V4 Word8)) -&gt; Maybe (V4 Word8) -&gt; IO ()
+forall t a (m :: * -&gt; *).
+(HasSetter t a, MonadIO m) =&gt;
+t -&gt; a -&gt; m ()
+</span><span class="hs-operator hs-var">$=</span></span><span> </span><span class="annot"><span class="annottext">V4 Word8 -&gt; Maybe (V4 Word8)
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">V4 Word8
+</span><a href="#local-6989586621679216340"><span class="hs-identifier hs-var">key</span></a></span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621679216336"><span class="annot"><span class="annottext">Texture
+</span><a href="#local-6989586621679216336"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Renderer -&gt; Surface -&gt; IO Texture
+forall (m :: * -&gt; *).
+(Functor m, MonadIO m) =&gt;
+Renderer -&gt; Surface -&gt; m Texture
+</span><span class="hs-identifier hs-var">SDL.createTextureFromSurface</span></span><span> </span><span class="annot"><span class="annottext">Renderer
+</span><a href="#local-6989586621679216346"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216344"><span class="hs-identifier hs-var">surface</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="annottext">Surface -&gt; IO ()
+forall (m :: * -&gt; *). MonadIO m =&gt; Surface -&gt; m ()
+</span><span class="hs-identifier hs-var">SDL.freeSurface</span></span><span> </span><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216344"><span class="hs-identifier hs-var">surface</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><span class="annottext">Texture -&gt; IO Texture
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Texture -&gt; V2 CInt -&gt; Texture
+</span><a href="Types.html#Texture"><span class="hs-identifier hs-var">Texture</span></a></span><span> </span><span class="annot"><span class="annottext">Texture
+</span><a href="#local-6989586621679216336"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="#local-6989586621679216342"><span class="hs-identifier hs-var">size</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- |Create a texture with string (using SDL.Font)</span><span>
+</span><span id="line-34"></span><span class="annot"><a href="SDLWrapper.html#loadTextTexture"><span class="hs-identifier hs-type">loadTextTexture</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SDL.Renderer</span></span><span> </span><span>
+</span><span id="line-35"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SFont.Font</span></span><span>   </span><span class="hs-comment">-- ^ Font to be used</span><span>
+</span><span id="line-36"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>       </span><span class="hs-comment">-- ^ Text to be displayed</span><span>
+</span><span id="line-37"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V4</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>     </span><span class="hs-comment">-- ^ Text color</span><span>
+</span><span id="line-38"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Types.html#Texture"><span class="hs-identifier hs-type">Texture</span></a></span><span>   </span><span class="hs-comment">-- ^ Texture object to return. It's our wrapper around SDL Texture which also contains size of texture</span><span>
+</span><span id="line-39"></span><span id="loadTextTexture"><span class="annot"><span class="annottext">loadTextTexture :: Renderer -&gt; Font -&gt; FilePath -&gt; V4 Word8 -&gt; IO Texture
+</span><a href="SDLWrapper.html#loadTextTexture"><span class="hs-identifier hs-var hs-var">loadTextTexture</span></a></span></span><span> </span><span id="local-6989586621679216330"><span class="annot"><span class="annottext">renderer :: Renderer
+</span><a href="#local-6989586621679216330"><span class="hs-identifier hs-var">renderer</span></a></span></span><span> </span><span id="local-6989586621679216329"><span class="annot"><span class="annottext">font :: Font
+</span><a href="#local-6989586621679216329"><span class="hs-identifier hs-var">font</span></a></span></span><span> </span><span id="local-6989586621679216328"><span class="annot"><span class="annottext">text :: FilePath
+</span><a href="#local-6989586621679216328"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span id="local-6989586621679216327"><span class="annot"><span class="annottext">color :: V4 Word8
+</span><a href="#local-6989586621679216327"><span class="hs-identifier hs-var">color</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621679216326"><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216326"><span class="hs-identifier hs-var">textSurface</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Font -&gt; V4 Word8 -&gt; Text -&gt; IO Surface
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Font -&gt; V4 Word8 -&gt; Text -&gt; m Surface
+</span><span class="hs-identifier hs-var">SFont.solid</span></span><span> </span><span class="annot"><span class="annottext">Font
+</span><a href="#local-6989586621679216329"><span class="hs-identifier hs-var">font</span></a></span><span> </span><span class="annot"><span class="annottext">V4 Word8
+</span><a href="#local-6989586621679216327"><span class="hs-identifier hs-var">color</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath -&gt; Text
+</span><span class="hs-identifier hs-var">pack</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679216328"><span class="hs-identifier hs-var">text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621679216324"><span class="annot"><span class="annottext">V2 CInt
+</span><a href="#local-6989586621679216324"><span class="hs-identifier hs-var">size</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Surface -&gt; IO (V2 CInt)
+forall (m :: * -&gt; *). MonadIO m =&gt; Surface -&gt; m (V2 CInt)
+</span><span class="hs-identifier hs-var">SDL.surfaceDimensions</span></span><span> </span><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216326"><span class="hs-identifier hs-var">textSurface</span></a></span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621679216323"><span class="annot"><span class="annottext">Texture
+</span><a href="#local-6989586621679216323"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Renderer -&gt; Surface -&gt; IO Texture
+forall (m :: * -&gt; *).
+(Functor m, MonadIO m) =&gt;
+Renderer -&gt; Surface -&gt; m Texture
+</span><span class="hs-identifier hs-var">SDL.createTextureFromSurface</span></span><span> </span><span class="annot"><span class="annottext">Renderer
+</span><a href="#local-6989586621679216330"><span class="hs-identifier hs-var">renderer</span></a></span><span> </span><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216326"><span class="hs-identifier hs-var">textSurface</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">Surface -&gt; IO ()
+forall (m :: * -&gt; *). MonadIO m =&gt; Surface -&gt; m ()
+</span><span class="hs-identifier hs-var">SDL.freeSurface</span></span><span> </span><span class="annot"><span class="annottext">Surface
+</span><a href="#local-6989586621679216326"><span class="hs-identifier hs-var">textSurface</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="annottext">Texture -&gt; IO Texture
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Texture -&gt; V2 CInt -&gt; Texture
+</span><a href="Types.html#Texture"><span class="hs-identifier hs-var">Texture</span></a></span><span> </span><span class="annot"><span class="annottext">Texture
+</span><a href="#local-6989586621679216323"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="#local-6989586621679216324"><span class="hs-identifier hs-var">size</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- |Render a texture on window</span><span>
+</span><span id="line-47"></span><span class="annot"><a href="SDLWrapper.html#renderTexture"><span class="hs-identifier hs-type">renderTexture</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SDL.Renderer</span></span><span> </span><span>
+</span><span id="line-48"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Types.html#Texture"><span class="hs-identifier hs-type">Texture</span></a></span><span>                      </span><span class="hs-comment">-- ^ Texture to be drawn</span><span>
+</span><span id="line-49"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span>                </span><span class="hs-comment">-- ^ Position to draw to</span><span>
+</span><span id="line-50"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SDL.Rectangle</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span class="hs-special">)</span><span>   </span><span class="hs-comment">-- ^ Rectangle from source to cut. If we want whole texture to be drawn, it should be Nothing</span><span>
+</span><span id="line-51"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span id="renderTexture"><span class="annot"><span class="annottext">renderTexture :: Renderer
+-&gt; Texture -&gt; Point V2 CInt -&gt; Maybe (Rectangle CInt) -&gt; IO ()
+</span><a href="SDLWrapper.html#renderTexture"><span class="hs-identifier hs-var hs-var">renderTexture</span></a></span></span><span> </span><span id="local-6989586621679216321"><span class="annot"><span class="annottext">r :: Renderer
+</span><a href="#local-6989586621679216321"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Types.html#Texture"><span class="hs-identifier hs-type">Texture</span></a></span><span> </span><span id="local-6989586621679216320"><span class="annot"><span class="annottext">t :: Texture
+</span><a href="#local-6989586621679216320"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679216319"><span class="annot"><span class="annottext">size :: V2 CInt
+</span><a href="#local-6989586621679216319"><span class="hs-identifier hs-var">size</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679216318"><span class="annot"><span class="annottext">xy :: Point V2 CInt
+</span><a href="#local-6989586621679216318"><span class="hs-identifier hs-var">xy</span></a></span></span><span> </span><span id="local-6989586621679216317"><span class="annot"><span class="annottext">clip :: Maybe (Rectangle CInt)
+</span><a href="#local-6989586621679216317"><span class="hs-identifier hs-var">clip</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679216316"><span class="annot"><span class="annottext">dstSize :: V2 CInt
+</span><a href="#local-6989586621679216316"><span class="hs-identifier hs-var hs-var">dstSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">V2 CInt
+-&gt; (Rectangle CInt -&gt; V2 CInt) -&gt; Maybe (Rectangle CInt) -&gt; V2 CInt
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="#local-6989586621679216319"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SDL.Rectangle</span></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679216313"><span class="annot"><span class="annottext">size' :: V2 CInt
+</span><a href="#local-6989586621679216313"><span class="hs-identifier hs-var">size'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>  </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="#local-6989586621679216313"><span class="hs-identifier hs-var">size'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (Rectangle CInt)
+</span><a href="#local-6989586621679216317"><span class="hs-identifier hs-var">clip</span></a></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Renderer
+-&gt; Texture
+-&gt; Maybe (Rectangle CInt)
+-&gt; Maybe (Rectangle CInt)
+-&gt; IO ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Renderer
+-&gt; Texture
+-&gt; Maybe (Rectangle CInt)
+-&gt; Maybe (Rectangle CInt)
+-&gt; m ()
+</span><span class="hs-identifier hs-var">SDL.copy</span></span><span> </span><span class="annot"><span class="annottext">Renderer
+</span><a href="#local-6989586621679216321"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Texture
+</span><a href="#local-6989586621679216320"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Rectangle CInt)
+</span><a href="#local-6989586621679216317"><span class="hs-identifier hs-var">clip</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Rectangle CInt -&gt; Maybe (Rectangle CInt)
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Point V2 CInt -&gt; V2 CInt -&gt; Rectangle CInt
+forall a. Point V2 a -&gt; V2 a -&gt; Rectangle a
+</span><span class="hs-identifier hs-var">SDL.Rectangle</span></span><span> </span><span class="annot"><span class="annottext">Point V2 CInt
+</span><a href="#local-6989586621679216318"><span class="hs-identifier hs-var">xy</span></a></span><span> </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="#local-6989586621679216316"><span class="hs-identifier hs-var">dstSize</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></pre></body></html>

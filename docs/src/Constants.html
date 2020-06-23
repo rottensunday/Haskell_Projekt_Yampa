@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : Constants
+Description : Magic numbers go here
+-}</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Constants</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Linear</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Foreign.C.Types</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">SDL</span></span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Types.html"><span class="hs-identifier">Types</span></a></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="annot"><a href="Constants.html#initScreenWidth"><span class="hs-identifier hs-type">initScreenWidth</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Constants.html#initScreenHeight"><span class="hs-identifier hs-type">initScreenHeight</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span>
+</span><span id="line-14"></span><span class="hs-special">(</span><span id="initScreenWidth"><span class="annot"><span class="annottext">initScreenWidth :: CInt
+</span><a href="Constants.html#initScreenWidth"><span class="hs-identifier hs-var">initScreenWidth</span></a></span></span><span class="hs-special">,</span><span> </span><span id="initScreenHeight"><span class="annot"><span class="annottext">initScreenHeight :: CInt
+</span><a href="Constants.html#initScreenHeight"><span class="hs-identifier hs-var">initScreenHeight</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">1280</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-number">960</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="annot"><a href="Constants.html#initTileWidth"><span class="hs-identifier hs-type">initTileWidth</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Constants.html#initTileHeight"><span class="hs-identifier hs-type">initTileHeight</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span>
+</span><span id="line-17"></span><span class="hs-special">(</span><span id="initTileWidth"><span class="annot"><span class="annottext">initTileWidth :: CInt
+</span><a href="Constants.html#initTileWidth"><span class="hs-identifier hs-var">initTileWidth</span></a></span></span><span class="hs-special">,</span><span> </span><span id="initTileHeight"><span class="annot"><span class="annottext">initTileHeight :: CInt
+</span><a href="Constants.html#initTileHeight"><span class="hs-identifier hs-var">initTileHeight</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">32</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-number">32</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span id="spriteSheetPath"><span class="annot"><span class="annottext">spriteSheetPath :: [Char]
+</span><a href="Constants.html#spriteSheetPath"><span class="hs-identifier hs-var hs-var">spriteSheetPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;../resources/sheep3.bmp&quot;</span></span><span>
+</span><span id="line-20"></span><span id="mapsPath"><span class="annot"><span class="annottext">mapsPath :: [Char]
+</span><a href="Constants.html#mapsPath"><span class="hs-identifier hs-var hs-var">mapsPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;../resources/levels/&quot;</span></span><span>
+</span><span id="line-21"></span><span id="fontPath"><span class="annot"><span class="annottext">fontPath :: [Char]
+</span><a href="Constants.html#fontPath"><span class="hs-identifier hs-var hs-var">fontPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;../resources/arial.ttf&quot;</span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span id="windowName"><span class="annot"><span class="annottext">windowName :: [Char]
+</span><a href="Constants.html#windowName"><span class="hs-identifier hs-var hs-var">windowName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;Ball Game!&quot;</span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span id="spriteSize"><span class="annot"><span class="annottext">spriteSize :: V2 CInt
+</span><a href="Constants.html#spriteSize"><span class="hs-identifier hs-var hs-var">spriteSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CInt -&gt; CInt -&gt; V2 CInt
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="Constants.html#initTileWidth"><span class="hs-identifier hs-var">initTileWidth</span></a></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="Constants.html#initTileHeight"><span class="hs-identifier hs-var">initTileHeight</span></a></span><span>
+</span><span id="line-26"></span><span id="ballClip"><span class="annot"><span class="annottext">ballClip :: Rectangle CInt
+</span><a href="Constants.html#ballClip"><span class="hs-identifier hs-var hs-var">ballClip</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Point V2 CInt -&gt; V2 CInt -&gt; Rectangle CInt
+forall a. Point V2 a -&gt; V2 a -&gt; Rectangle a
+</span><span class="hs-identifier hs-var">SDL.Rectangle</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">V2 CInt -&gt; Point V2 CInt
+forall (f :: * -&gt; *) a. f a -&gt; Point f a
+</span><span class="hs-identifier hs-var">SDL.P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CInt -&gt; CInt -&gt; V2 CInt
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="Constants.html#spriteSize"><span class="hs-identifier hs-var">spriteSize</span></a></span><span>
+</span><span id="line-27"></span><span id="wallClip"><span class="annot"><span class="annottext">wallClip :: Rectangle CInt
+</span><a href="Constants.html#wallClip"><span class="hs-identifier hs-var hs-var">wallClip</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Point V2 CInt -&gt; V2 CInt -&gt; Rectangle CInt
+forall a. Point V2 a -&gt; V2 a -&gt; Rectangle a
+</span><span class="hs-identifier hs-var">SDL.Rectangle</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">V2 CInt -&gt; Point V2 CInt
+forall (f :: * -&gt; *) a. f a -&gt; Point f a
+</span><span class="hs-identifier hs-var">SDL.P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CInt -&gt; CInt -&gt; V2 CInt
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="Constants.html#initTileWidth"><span class="hs-identifier hs-var">initTileWidth</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="Constants.html#spriteSize"><span class="hs-identifier hs-var">spriteSize</span></a></span><span>
+</span><span id="line-28"></span><span id="spikeClip"><span class="annot"><span class="annottext">spikeClip :: Rectangle CInt
+</span><a href="Constants.html#spikeClip"><span class="hs-identifier hs-var hs-var">spikeClip</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Point V2 CInt -&gt; V2 CInt -&gt; Rectangle CInt
+forall a. Point V2 a -&gt; V2 a -&gt; Rectangle a
+</span><span class="hs-identifier hs-var">SDL.Rectangle</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">V2 CInt -&gt; Point V2 CInt
+forall (f :: * -&gt; *) a. f a -&gt; Point f a
+</span><span class="hs-identifier hs-var">SDL.P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CInt -&gt; CInt -&gt; V2 CInt
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="Constants.html#initTileHeight"><span class="hs-identifier hs-var">initTileHeight</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="Constants.html#spriteSize"><span class="hs-identifier hs-var">spriteSize</span></a></span><span>
+</span><span id="line-29"></span><span id="goalClip"><span class="annot"><span class="annottext">goalClip :: Rectangle CInt
+</span><a href="Constants.html#goalClip"><span class="hs-identifier hs-var hs-var">goalClip</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Point V2 CInt -&gt; V2 CInt -&gt; Rectangle CInt
+forall a. Point V2 a -&gt; V2 a -&gt; Rectangle a
+</span><span class="hs-identifier hs-var">SDL.Rectangle</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">V2 CInt -&gt; Point V2 CInt
+forall (f :: * -&gt; *) a. f a -&gt; Point f a
+</span><span class="hs-identifier hs-var">SDL.P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CInt -&gt; CInt -&gt; V2 CInt
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="Constants.html#initTileWidth"><span class="hs-identifier hs-var">initTileWidth</span></a></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="Constants.html#initTileHeight"><span class="hs-identifier hs-var">initTileHeight</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">V2 CInt
+</span><a href="Constants.html#spriteSize"><span class="hs-identifier hs-var">spriteSize</span></a></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span id="startBall"><span class="annot"><span class="annottext">startBall :: Ball
+</span><a href="Constants.html#startBall"><span class="hs-identifier hs-var hs-var">startBall</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Ball :: Point V2 Double
+-&gt; V2 Double -&gt; V2 Double -&gt; Double -&gt; Double -&gt; Ball
+</span><a href="Types.html#Ball"><span class="hs-identifier hs-type hs-type">Ball</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><span class="annottext">position :: Point V2 Double
+</span><a href="Types.html#position"><span class="hs-identifier hs-var">position</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">V2 Double -&gt; Point V2 Double
+forall (f :: * -&gt; *) a. f a -&gt; Point f a
+</span><span class="hs-identifier hs-var">SDL.P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="hs-number">657</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CInt -&gt; Double
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="Constants.html#initTileHeight"><span class="hs-identifier hs-var">initTileHeight</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><span class="annottext">velocity :: V2 Double
+</span><a href="Types.html#velocity"><span class="hs-identifier hs-var">velocity</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="annottext">acceleration :: V2 Double
+</span><a href="Types.html#acceleration"><span class="hs-identifier hs-var">acceleration</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">45</span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><span class="annottext">radius :: Double
+</span><a href="#local-6989586621679215485"><span class="hs-identifier hs-var">radius</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">13</span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="annottext">power :: Double
+</span><a href="#local-6989586621679215484"><span class="hs-identifier hs-var">power</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">60</span></span><span>
+</span><span id="line-37"></span><span class="hs-special">}</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span id="simulationRate"><span class="annot"><span class="annottext">simulationRate :: Double
+</span><a href="Constants.html#simulationRate"><span class="hs-identifier hs-var hs-var">simulationRate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">0.015</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span></pre></body></html>

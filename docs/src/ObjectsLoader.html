@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : ObjectsLoader
+Description : Load game data from files
+-}</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">ObjectsLoader</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Linear</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Foreign.C.Types</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">SDL</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Point</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Tiled</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.Split</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.IO</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.Directory</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Types.html"><span class="hs-identifier">Types</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Constants.html"><span class="hs-identifier">Constants</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- |Make a GidsToObjsMap for all objects which should be considered when loading map</span><span>
+</span><span id="line-21"></span><span class="annot"><a href="ObjectsLoader.html#prepareGidsToObjsMap"><span class="hs-identifier hs-type">prepareGidsToObjsMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Types.html#GidsToObjsMap"><span class="hs-identifier hs-type">GidsToObjsMap</span></a></span><span>
+</span><span id="line-22"></span><span id="prepareGidsToObjsMap"><span class="annot"><span class="annottext">prepareGidsToObjsMap :: GidsToObjsMap
+</span><a href="ObjectsLoader.html#prepareGidsToObjsMap"><span class="hs-identifier hs-var hs-var">prepareGidsToObjsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Word32, GameObj)] -&gt; GidsToObjsMap
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObjType -&gt; Rectangle CInt -&gt; GameObj
+</span><a href="Types.html#GameObj"><span class="hs-identifier hs-var">GameObj</span></a></span><span> </span><span class="annot"><span class="annottext">GameObjType
+</span><a href="Types.html#Player"><span class="hs-identifier hs-var">Player</span></a></span><span> </span><span class="annot"><span class="annottext">Rectangle CInt
+</span><a href="Constants.html#ballClip"><span class="hs-identifier hs-var">ballClip</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObjType -&gt; Rectangle CInt -&gt; GameObj
+</span><a href="Types.html#GameObj"><span class="hs-identifier hs-var">GameObj</span></a></span><span> </span><span class="annot"><span class="annottext">GameObjType
+</span><a href="Types.html#Wall"><span class="hs-identifier hs-var">Wall</span></a></span><span> </span><span class="annot"><span class="annottext">Rectangle CInt
+</span><a href="Constants.html#wallClip"><span class="hs-identifier hs-var">wallClip</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">3</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObjType -&gt; Rectangle CInt -&gt; GameObj
+</span><a href="Types.html#GameObj"><span class="hs-identifier hs-var">GameObj</span></a></span><span> </span><span class="annot"><span class="annottext">GameObjType
+</span><a href="Types.html#Spikes"><span class="hs-identifier hs-var">Spikes</span></a></span><span> </span><span class="annot"><span class="annottext">Rectangle CInt
+</span><a href="Constants.html#spikeClip"><span class="hs-identifier hs-var">spikeClip</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">4</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObjType -&gt; Rectangle CInt -&gt; GameObj
+</span><a href="Types.html#GameObj"><span class="hs-identifier hs-var">GameObj</span></a></span><span> </span><span class="annot"><span class="annottext">GameObjType
+</span><a href="Types.html#Goal"><span class="hs-identifier hs-var">Goal</span></a></span><span> </span><span class="annot"><span class="annottext">Rectangle CInt
+</span><a href="Constants.html#goalClip"><span class="hs-identifier hs-var">goalClip</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- |Load a map from file and initialize ObjsMap</span><span>
+</span><span id="line-28"></span><span class="annot"><a href="ObjectsLoader.html#prepareStaticObjsMapSingle"><span class="hs-identifier hs-type">prepareStaticObjsMapSingle</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span class="hs-special">)</span><span>  </span><span class="hs-comment">-- ^ tileWidth and tileHeight</span><span>
+</span><span id="line-29"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span>       </span><span class="hs-comment">-- ^ Map file path</span><span>
+</span><span id="line-30"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Types.html#ObjsMap"><span class="hs-identifier hs-type">ObjsMap</span></a></span><span>     </span><span class="hs-comment">-- ^ Loaded ObjsMap</span><span>
+</span><span id="line-31"></span><span id="prepareStaticObjsMapSingle"><span class="annot"><span class="annottext">prepareStaticObjsMapSingle :: (CInt, CInt) -&gt; FilePath -&gt; IO ObjsMap
+</span><a href="ObjectsLoader.html#prepareStaticObjsMapSingle"><span class="hs-identifier hs-var hs-var">prepareStaticObjsMapSingle</span></a></span></span><span> </span><span id="local-6989586621679215571"><span class="annot"><span class="annottext">gi :: (CInt, CInt)
+</span><a href="#local-6989586621679215571"><span class="hs-identifier hs-var">gi</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621679215570"><span class="annot"><span class="annottext">width :: CInt
+</span><a href="#local-6989586621679215570"><span class="hs-identifier hs-var">width</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679215569"><span class="annot"><span class="annottext">height :: CInt
+</span><a href="#local-6989586621679215569"><span class="hs-identifier hs-var">height</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679215568"><span class="annot"><span class="annottext">file :: FilePath
+</span><a href="#local-6989586621679215568"><span class="hs-identifier hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621679215567"><span class="annot"><span class="annottext">TiledMap
+</span><a href="#local-6989586621679215567"><span class="hs-identifier hs-var">board</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; IO TiledMap
+</span><span class="hs-identifier hs-var">loadMapFile</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215568"><span class="hs-identifier hs-var">file</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679215565"><span class="annot"><span class="annottext">gidsObjsMap :: GidsToObjsMap
+</span><a href="#local-6989586621679215565"><span class="hs-identifier hs-var hs-var">gidsObjsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GidsToObjsMap
+</span><a href="ObjectsLoader.html#prepareGidsToObjsMap"><span class="hs-identifier hs-var">prepareGidsToObjsMap</span></a></span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621679215564"><span class="annot"><span class="annottext">tileMap :: ObjsMap
+</span><a href="#local-6989586621679215564"><span class="hs-identifier hs-var hs-var">tileMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Tile -&gt; GameObj) -&gt; Map (Int, Int) Tile -&gt; ObjsMap
+forall a b k. (a -&gt; b) -&gt; Map k a -&gt; Map k b
+</span><span class="hs-identifier hs-var">Map.map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679215562"><span class="annot"><span class="annottext">tile :: Tile
+</span><a href="#local-6989586621679215562"><span class="hs-identifier hs-var">tile</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GidsToObjsMap
+</span><a href="#local-6989586621679215565"><span class="hs-identifier hs-var">gidsObjsMap</span></a></span><span> </span><span class="annot"><span class="annottext">GidsToObjsMap -&gt; Word32 -&gt; GameObj
+forall k a. Ord k =&gt; Map k a -&gt; k -&gt; a
+</span><span class="hs-operator hs-var">Map.!</span></span><span> </span><span class="annot"><span class="annottext">Tile -&gt; Word32
+</span><span class="hs-identifier hs-var hs-var">tileGid</span></span><span> </span><span class="annot"><span class="annottext">Tile
+</span><a href="#local-6989586621679215562"><span class="hs-identifier hs-var">tile</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Map (Int, Int) Tile -&gt; ObjsMap) -&gt; Map (Int, Int) Tile -&gt; ObjsMap
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-35"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((Int, Int) -&gt; (Int, Int))
+-&gt; Map (Int, Int) Tile -&gt; Map (Int, Int) Tile
+forall k2 k1 a. Ord k2 =&gt; (k1 -&gt; k2) -&gt; Map k1 a -&gt; Map k2 a
+</span><span class="hs-identifier hs-var">Map.mapKeys</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679215558"><span class="annot"><span class="annottext">k :: (Int, Int)
+</span><a href="#local-6989586621679215558"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621679215557"><span class="annot"><span class="annottext">x :: Int
+</span><a href="#local-6989586621679215557"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679215556"><span class="annot"><span class="annottext">y :: Int
+</span><a href="#local-6989586621679215556"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215557"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">CInt -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="#local-6989586621679215570"><span class="hs-identifier hs-var">width</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215556"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">CInt -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="#local-6989586621679215569"><span class="hs-identifier hs-var">height</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Map (Int, Int) Tile -&gt; Map (Int, Int) Tile)
+-&gt; (TiledMap -&gt; Map (Int, Int) Tile)
+-&gt; TiledMap
+-&gt; Map (Int, Int) Tile
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Layer -&gt; Map (Int, Int) Tile
+</span><span class="hs-identifier hs-var hs-var">layerData</span></span><span> </span><span class="annot"><span class="annottext">(Layer -&gt; Map (Int, Int) Tile)
+-&gt; (TiledMap -&gt; Layer) -&gt; TiledMap -&gt; Map (Int, Int) Tile
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[Layer] -&gt; Layer
+forall a. [a] -&gt; a
+</span><span class="hs-identifier hs-var">head</span></span><span> </span><span class="annot"><span class="annottext">([Layer] -&gt; Layer) -&gt; (TiledMap -&gt; [Layer]) -&gt; TiledMap -&gt; Layer
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TiledMap -&gt; [Layer]
+</span><span class="hs-identifier hs-var hs-var">mapLayers</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TiledMap
+</span><a href="#local-6989586621679215567"><span class="hs-identifier hs-var">board</span></a></span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="annottext">ObjsMap -&gt; IO ObjsMap
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">ObjsMap
+</span><a href="#local-6989586621679215564"><span class="hs-identifier hs-var">tileMap</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- |Load all maps from directory and initialize collection of ObjsMap</span><span>
+</span><span id="line-39"></span><span class="annot"><a href="ObjectsLoader.html#prepareStaticObjsMap"><span class="hs-identifier hs-type">prepareStaticObjsMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span class="hs-special">)</span><span>        </span><span class="hs-comment">-- ^ tileWidth and tileHeight</span><span>
+</span><span id="line-40"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span>             </span><span class="hs-comment">-- ^ Directory with maps (only)</span><span>
+</span><span id="line-41"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Types.html#ObjsMap"><span class="hs-identifier hs-type">ObjsMap</span></a></span><span class="hs-special">]</span><span>         </span><span class="hs-comment">-- ^ Collection of loaded ObjsMaps</span><span>
+</span><span id="line-42"></span><span id="prepareStaticObjsMap"><span class="annot"><span class="annottext">prepareStaticObjsMap :: (CInt, CInt) -&gt; FilePath -&gt; IO [ObjsMap]
+</span><a href="ObjectsLoader.html#prepareStaticObjsMap"><span class="hs-identifier hs-var hs-var">prepareStaticObjsMap</span></a></span></span><span> </span><span id="local-6989586621679215549"><span class="annot"><span class="annottext">gi :: (CInt, CInt)
+</span><a href="#local-6989586621679215549"><span class="hs-identifier hs-var">gi</span></a></span></span><span> </span><span id="local-6989586621679215548"><span class="annot"><span class="annottext">mPath :: FilePath
+</span><a href="#local-6989586621679215548"><span class="hs-identifier hs-var">mPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621679215547"><span class="annot"><span class="annottext">[FilePath]
+</span><a href="#local-6989586621679215547"><span class="hs-identifier hs-var">fileNames</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(FilePath -&gt; FilePath) -&gt; [FilePath] -&gt; [FilePath]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215548"><span class="hs-identifier hs-var">mPath</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; FilePath
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([FilePath] -&gt; [FilePath])
+-&gt; ([FilePath] -&gt; [FilePath]) -&gt; [FilePath] -&gt; [FilePath]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span>
+</span><span id="line-44"></span><span>                  </span><span class="annot"><span class="annottext">[FilePath] -&gt; [FilePath]
+forall a. Ord a =&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">L.sort</span></span><span> </span><span class="annot"><span class="annottext">([FilePath] -&gt; [FilePath])
+-&gt; ([FilePath] -&gt; [FilePath]) -&gt; [FilePath] -&gt; [FilePath]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span>
+</span><span id="line-45"></span><span>                  </span><span class="annot"><span class="annottext">(FilePath -&gt; Bool) -&gt; [FilePath] -&gt; [FilePath]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679215545"><span class="annot"><span class="annottext">file :: FilePath
+</span><a href="#local-6989586621679215545"><span class="hs-identifier hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215545"><span class="hs-identifier hs-var">file</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215545"><span class="hs-identifier hs-var">file</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="hs-string">&quot;..&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([FilePath] -&gt; [FilePath]) -&gt; IO [FilePath] -&gt; IO [FilePath]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span>
+</span><span id="line-46"></span><span>                  </span><span class="annot"><span class="annottext">FilePath -&gt; IO [FilePath]
+</span><span class="hs-identifier hs-var">getDirectoryContents</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215548"><span class="hs-identifier hs-var">mPath</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><span class="annottext">(FilePath -&gt; IO ObjsMap) -&gt; [FilePath] -&gt; IO [ObjsMap]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Traversable t, Monad m) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+</span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(CInt, CInt) -&gt; FilePath -&gt; IO ObjsMap
+</span><a href="ObjectsLoader.html#prepareStaticObjsMapSingle"><span class="hs-identifier hs-var">prepareStaticObjsMapSingle</span></a></span><span> </span><span class="annot"><span class="annottext">(CInt, CInt)
+</span><a href="#local-6989586621679215549"><span class="hs-identifier hs-var">gi</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FilePath]
+</span><a href="#local-6989586621679215547"><span class="hs-identifier hs-var">fileNames</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- |TODO load dynamic game objects. This is NOT finished: we don't load anything from files.</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- Some objects are hard-coded just to show it works.</span><span>
+</span><span id="line-51"></span><span class="annot"><a href="ObjectsLoader.html#prepareDynamicObjs"><span class="hs-identifier hs-type">prepareDynamicObjs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>                </span><span>
+</span><span id="line-52"></span><span>                  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><a href="Types.html#DynamicGameObj"><span class="hs-identifier hs-type">DynamicGameObj</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>     </span><span class="hs-comment">-- ^ Collection of collections of DynamicGameObjs (one list for each level)</span><span>
+</span><span id="line-53"></span><span id="prepareDynamicObjs"><span class="annot"><span class="annottext">prepareDynamicObjs :: Int -&gt; IO [[DynamicGameObj]]
+</span><a href="ObjectsLoader.html#prepareDynamicObjs"><span class="hs-identifier hs-var hs-var">prepareDynamicObjs</span></a></span></span><span> </span><span id="local-6989586621679215538"><span class="annot"><span class="annottext">n :: Int
+</span><a href="#local-6989586621679215538"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[DynamicGameObj]] -&gt; IO [[DynamicGameObj]]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">([[DynamicGameObj]] -&gt; IO [[DynamicGameObj]])
+-&gt; [[DynamicGameObj]] -&gt; IO [[DynamicGameObj]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; [DynamicGameObj] -&gt; [[DynamicGameObj]]
+forall a. Int -&gt; a -&gt; [a]
+</span><span class="hs-identifier hs-var">replicate</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215538"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">GameObj
+-&gt; Point V2 Double
+-&gt; Direction
+-&gt; Double
+-&gt; Double
+-&gt; DynamicGameObj
+</span><a href="Types.html#DynamicGameObj"><span class="hs-identifier hs-var">DynamicGameObj</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GameObjType -&gt; Rectangle CInt -&gt; GameObj
+</span><a href="Types.html#GameObj"><span class="hs-identifier hs-var">GameObj</span></a></span><span> </span><span class="annot"><span class="annottext">GameObjType
+</span><a href="Types.html#Wall"><span class="hs-identifier hs-var">Wall</span></a></span><span> </span><span class="annot"><span class="annottext">Rectangle CInt
+</span><a href="Constants.html#wallClip"><span class="hs-identifier hs-var">wallClip</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">V2 Double -&gt; Point V2 Double
+forall (f :: * -&gt; *) a. f a -&gt; Point f a
+</span><span class="hs-identifier hs-var">P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="hs-number">200</span></span><span> </span><span class="annot"><span class="hs-number">50</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Direction
+</span><a href="Types.html#HorizontalRight"><span class="hs-identifier hs-var">HorizontalRight</span></a></span><span> </span><span class="annot"><span class="hs-number">20</span></span><span> </span><span class="annot"><span class="hs-number">200</span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>                             </span><span class="annot"><span class="annottext">GameObj
+-&gt; Point V2 Double
+-&gt; Direction
+-&gt; Double
+-&gt; Double
+-&gt; DynamicGameObj
+</span><a href="Types.html#DynamicGameObj"><span class="hs-identifier hs-var">DynamicGameObj</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GameObjType -&gt; Rectangle CInt -&gt; GameObj
+</span><a href="Types.html#GameObj"><span class="hs-identifier hs-var">GameObj</span></a></span><span> </span><span class="annot"><span class="annottext">GameObjType
+</span><a href="Types.html#Wall"><span class="hs-identifier hs-var">Wall</span></a></span><span> </span><span class="annot"><span class="annottext">Rectangle CInt
+</span><a href="Constants.html#wallClip"><span class="hs-identifier hs-var">wallClip</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">V2 Double -&gt; Point V2 Double
+forall (f :: * -&gt; *) a. f a -&gt; Point f a
+</span><span class="hs-identifier hs-var">P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="hs-number">200</span></span><span> </span><span class="annot"><span class="hs-number">50</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Direction
+</span><a href="Types.html#VerticalDown"><span class="hs-identifier hs-var">VerticalDown</span></a></span><span> </span><span class="annot"><span class="hs-number">20</span></span><span> </span><span class="annot"><span class="hs-number">200</span></span><span class="hs-special">]</span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- |Given directory where maps are, this function creates missing scores files in current directory and</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- returns list of paths to files with scores</span><span>
+</span><span id="line-58"></span><span class="annot"><a href="ObjectsLoader.html#prepareScoresFiles"><span class="hs-identifier hs-type">prepareScoresFiles</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span>              </span><span class="hs-comment">-- ^ Directory where scores should be stored</span><span>
+</span><span id="line-59"></span><span>                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span class="hs-special">]</span><span>          </span><span class="hs-comment">-- ^ File paths of all scores files</span><span>
+</span><span id="line-60"></span><span id="prepareScoresFiles"><span class="annot"><span class="annottext">prepareScoresFiles :: FilePath -&gt; IO [FilePath]
+</span><a href="ObjectsLoader.html#prepareScoresFiles"><span class="hs-identifier hs-var hs-var">prepareScoresFiles</span></a></span></span><span> </span><span id="local-6989586621679215530"><span class="annot"><span class="annottext">mPath :: FilePath
+</span><a href="#local-6989586621679215530"><span class="hs-identifier hs-var">mPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621679215529"><span class="annot"><span class="annottext">[FilePath]
+</span><a href="#local-6989586621679215529"><span class="hs-identifier hs-var">fileNames</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(FilePath -&gt; FilePath) -&gt; [FilePath] -&gt; [FilePath]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; FilePath
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot;wyniki.txt&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(FilePath -&gt; FilePath)
+-&gt; (FilePath -&gt; FilePath) -&gt; FilePath -&gt; FilePath
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[FilePath] -&gt; FilePath
+forall a. [a] -&gt; a
+</span><span class="hs-identifier hs-var">head</span></span><span> </span><span class="annot"><span class="annottext">([FilePath] -&gt; FilePath)
+-&gt; (FilePath -&gt; [FilePath]) -&gt; FilePath -&gt; FilePath
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; [FilePath]
+forall a. Eq a =&gt; [a] -&gt; [a] -&gt; [[a]]
+</span><span class="hs-identifier hs-var">splitOn</span></span><span> </span><span class="annot"><span class="hs-string">&quot;.&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([FilePath] -&gt; [FilePath])
+-&gt; ([FilePath] -&gt; [FilePath]) -&gt; [FilePath] -&gt; [FilePath]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[FilePath] -&gt; [FilePath]
+forall a. Ord a =&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">L.sort</span></span><span> </span><span class="annot"><span class="annottext">([FilePath] -&gt; [FilePath])
+-&gt; ([FilePath] -&gt; [FilePath]) -&gt; [FilePath] -&gt; [FilePath]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(FilePath -&gt; Bool) -&gt; [FilePath] -&gt; [FilePath]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679215527"><span class="annot"><span class="annottext">file :: FilePath
+</span><a href="#local-6989586621679215527"><span class="hs-identifier hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215527"><span class="hs-identifier hs-var">file</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215527"><span class="hs-identifier hs-var">file</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="hs-string">&quot;..&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([FilePath] -&gt; [FilePath]) -&gt; IO [FilePath] -&gt; IO [FilePath]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; IO [FilePath]
+</span><span class="hs-identifier hs-var">getDirectoryContents</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215530"><span class="hs-identifier hs-var">mPath</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621679215526"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215526"><span class="hs-identifier hs-var">currentDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO FilePath
+</span><span class="hs-identifier hs-var">getCurrentDirectory</span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="annottext">(FilePath -&gt; IO ()) -&gt; [FilePath] -&gt; IO ()
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Foldable t, Monad m) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m ()
+</span><span class="hs-identifier hs-var">mapM_</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679215523"><span class="annot"><span class="annottext">file :: FilePath
+</span><a href="#local-6989586621679215523"><span class="hs-identifier hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; IOMode -&gt; (Handle -&gt; IO ()) -&gt; IO ()
+forall r. FilePath -&gt; IOMode -&gt; (Handle -&gt; IO r) -&gt; IO r
+</span><span class="hs-identifier hs-var">withFile</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215526"><span class="hs-identifier hs-var">currentDir</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; FilePath
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot;/&quot;</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; FilePath
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215523"><span class="hs-identifier hs-var">file</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">IOMode
+</span><span class="hs-identifier hs-var">AppendMode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IO () -&gt; Handle -&gt; IO ()
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; Handle -&gt; IO ()) -&gt; IO () -&gt; Handle -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FilePath]
+</span><a href="#local-6989586621679215529"><span class="hs-identifier hs-var">fileNames</span></a></span><span> </span><span class="hs-comment">-- this should create score files which are not present</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><span class="annottext">[FilePath] -&gt; IO [FilePath]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">([FilePath] -&gt; IO [FilePath]) -&gt; [FilePath] -&gt; IO [FilePath]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(FilePath -&gt; FilePath) -&gt; [FilePath] -&gt; [FilePath]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679215519"><span class="annot"><span class="annottext">file :: FilePath
+</span><a href="#local-6989586621679215519"><span class="hs-identifier hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215526"><span class="hs-identifier hs-var">currentDir</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; FilePath
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot;/&quot;</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; FilePath
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679215519"><span class="hs-identifier hs-var">file</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FilePath]
+</span><a href="#local-6989586621679215529"><span class="hs-identifier hs-var">fileNames</span></a></span></pre></body></html>

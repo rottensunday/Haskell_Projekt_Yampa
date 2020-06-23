@@ -1,0 +1,373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : GameController
+Description : Signal function to control game state
+-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE Arrows #-}</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">GameController</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">FRP.Yampa</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Linear</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Linear.Affine</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">FRP.Yampa.Switches</span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Parser.html"><span class="hs-identifier">Parser</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Types.html"><span class="hs-identifier">Types</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="BallController.html"><span class="hs-identifier">BallController</span></a></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- |This simple controller is used to control the state of dynamic game objects beside the player.</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- These objects have very basic functionanlity: initial position, positon limit, directory and speed.</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- They just slide back and forward.</span><span>
+</span><span id="line-21"></span><span class="annot"><a href="GameController.html#dynamicObjectController"><span class="hs-identifier hs-type">dynamicObjectController</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Types.html#DynamicGameObj"><span class="hs-identifier hs-type">DynamicGameObj</span></a></span><span>               </span><span class="hs-comment">-- ^ Our object data</span><span>
+</span><span id="line-22"></span><span>                        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>                       </span><span class="hs-comment">-- ^ Position value to add to initial position (used in switching)</span><span>
+</span><span id="line-23"></span><span>                        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Types.html#GameObj"><span class="hs-identifier hs-type">GameObj</span></a></span><span class="hs-special">)</span><span>   </span><span class="hs-comment">-- ^ SF which controls our object position. It returns data necessary for Ball to consider (position and type)</span><span>
+</span><span id="line-24"></span><span id="dynamicObjectController"><span class="annot"><span class="annottext">dynamicObjectController :: DynamicGameObj -&gt; Double -&gt; SF () (V2 Double, GameObj)
+</span><a href="GameController.html#dynamicObjectController"><span class="hs-identifier hs-var hs-var">dynamicObjectController</span></a></span></span><span> </span><span id="local-6989586621679216254"><span class="annot"><span class="annottext">dgo :: DynamicGameObj
+</span><a href="#local-6989586621679216254"><span class="hs-identifier hs-var">dgo</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Types.html#DynamicGameObj"><span class="hs-identifier hs-type">DynamicGameObj</span></a></span><span> </span><span id="local-6989586621679216252"><span class="annot"><span class="annottext">obj :: GameObj
+</span><a href="#local-6989586621679216252"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span id="local-6989586621679216251"><span class="annot"><span class="annottext">pos :: Point V2 Double
+</span><a href="#local-6989586621679216251"><span class="hs-identifier hs-var">pos</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span id="local-6989586621679216248"><span class="annot"><span class="annottext">px :: Double
+</span><a href="#local-6989586621679216248"><span class="hs-identifier hs-var">px</span></a></span></span><span> </span><span id="local-6989586621679216247"><span class="annot"><span class="annottext">py :: Double
+</span><a href="#local-6989586621679216247"><span class="hs-identifier hs-var">py</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span id="local-6989586621679216246"><span class="annot"><span class="annottext">dir :: Direction
+</span><a href="#local-6989586621679216246"><span class="hs-identifier hs-var">dir</span></a></span></span><span> </span><span id="local-6989586621679216245"><span class="annot"><span class="annottext">s :: Double
+</span><a href="#local-6989586621679216245"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621679216244"><span class="annot"><span class="annottext">l :: Double
+</span><a href="#local-6989586621679216244"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679216243"><span class="annot"><span class="annottext">start :: Double
+</span><a href="#local-6989586621679216243"><span class="hs-identifier hs-var">start</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SF () ((V2 Double, GameObj), Event Double)
+-&gt; (Double -&gt; SF () (V2 Double, GameObj))
+-&gt; SF () (V2 Double, GameObj)
+forall a b c. SF a (b, Event c) -&gt; (c -&gt; SF a b) -&gt; SF a b
+</span><span class="hs-identifier hs-var">switch</span></span><span> </span><span class="annot"><span class="annottext">SF () ((V2 Double, GameObj), Event Double)
+forall t. SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216241"><span class="hs-identifier hs-var">calc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DynamicGameObj -&gt; Double -&gt; SF () (V2 Double, GameObj)
+</span><a href="GameController.html#dynamicObjectController"><span class="hs-identifier hs-var">dynamicObjectController</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GameObj
+-&gt; Point V2 Double
+-&gt; Direction
+-&gt; Double
+-&gt; Double
+-&gt; DynamicGameObj
+</span><a href="Types.html#DynamicGameObj"><span class="hs-identifier hs-var">DynamicGameObj</span></a></span><span> </span><span class="annot"><span class="annottext">GameObj
+</span><a href="#local-6989586621679216252"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Point V2 Double
+</span><a href="#local-6989586621679216251"><span class="hs-identifier hs-var">pos</span></a></span><span> </span><span class="annot"><span class="annottext">Direction
+</span><a href="#local-6989586621679216246"><span class="hs-identifier hs-var">dir</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216245"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216244"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-comment">-- we only consider the direction and then modify corresponding position based on speed</span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-comment">-- switching is used to &quot;bounce&quot; when achieving position limit</span><span>
+</span><span id="line-28"></span><span>    </span><span id="local-6989586621679216241"><span class="annot"><span class="annottext">calc :: SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216241"><span class="hs-identifier hs-var hs-var">calc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Direction
+</span><a href="#local-6989586621679216246"><span class="hs-identifier hs-var">dir</span></a></span><span> </span><span class="hs-keyword">of</span><span> </span><span class="annot"><a href="Types.html#VerticalUp"><span class="hs-identifier hs-type">VerticalUp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SF t ((V2 Double, GameObj), Event Double)
+forall t. SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216239"><span class="hs-identifier hs-var">vertCalcUp</span></a></span><span>
+</span><span id="line-29"></span><span>                       </span><span class="annot"><a href="Types.html#VerticalDown"><span class="hs-identifier hs-type">VerticalDown</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SF t ((V2 Double, GameObj), Event Double)
+forall t. SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216237"><span class="hs-identifier hs-var">vertCalcDown</span></a></span><span>
+</span><span id="line-30"></span><span>                       </span><span class="annot"><a href="Types.html#HorizontalLeft"><span class="hs-identifier hs-type">HorizontalLeft</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SF t ((V2 Double, GameObj), Event Double)
+forall t. SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216235"><span class="hs-identifier hs-var">horCalcLeft</span></a></span><span>
+</span><span id="line-31"></span><span>                       </span><span class="annot"><a href="Types.html#HorizontalRight"><span class="hs-identifier hs-type">HorizontalRight</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SF t ((V2 Double, GameObj), Event Double)
+forall t. SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216235"><span class="hs-identifier hs-var">horCalcLeft</span></a></span><span>
+</span><span id="line-32"></span><span>    </span><span id="local-6989586621679216239"><span class="annot"><span class="annottext">vertCalcUp :: SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216239"><span class="hs-identifier hs-var hs-var">vertCalcUp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span id="local-6989586621679216233"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679216233"><span class="hs-identifier hs-var">input</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621679216232"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216232"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Double Double
+forall a s. VectorSpace a s =&gt; SF a a
+</span><span class="hs-identifier hs-var">integral</span></span><span> </span><span class="annot"><span class="annottext">SF Double Double -&gt; (Double -&gt; Double) -&gt; SF Double Double
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; (c -&gt; d) -&gt; a b d
+</span><span class="hs-operator hs-var">&gt;&gt;^</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216243"><span class="hs-identifier hs-var">start</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216245"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621679216228"><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216228"><span class="hs-identifier hs-var">should_switch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Bool (Event ())
+</span><span class="hs-identifier hs-var">edge</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216232"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216247"><span class="hs-identifier hs-var">py</span></a></span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216244"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216232"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216247"><span class="hs-identifier hs-var">py</span></a></span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">SF
+  ((V2 Double, GameObj), Event Double)
+  ((V2 Double, GameObj), Event Double)
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216248"><span class="hs-identifier hs-var">px</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216232"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObj
+</span><a href="#local-6989586621679216252"><span class="hs-identifier hs-var">obj</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216228"><span class="hs-identifier hs-var">should_switch</span></a></span><span> </span><span class="annot"><span class="annottext">Event () -&gt; Double -&gt; Event Double
+forall a b. Event a -&gt; b -&gt; Event b
+</span><span class="hs-operator hs-var">`tag`</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216232"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>    </span><span id="local-6989586621679216237"><span class="annot"><span class="annottext">vertCalcDown :: SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216237"><span class="hs-identifier hs-var hs-var">vertCalcDown</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span id="local-6989586621679216221"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679216221"><span class="hs-identifier hs-var">input</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621679216220"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216220"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Double Double
+forall a s. VectorSpace a s =&gt; SF a a
+</span><span class="hs-identifier hs-var">integral</span></span><span> </span><span class="annot"><span class="annottext">SF Double Double -&gt; (Double -&gt; Double) -&gt; SF Double Double
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; (c -&gt; d) -&gt; a b d
+</span><span class="hs-operator hs-var">&gt;&gt;^</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216243"><span class="hs-identifier hs-var">start</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216245"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621679216219"><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216219"><span class="hs-identifier hs-var">should_switch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Bool (Event ())
+</span><span class="hs-identifier hs-var">edge</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216220"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216247"><span class="hs-identifier hs-var">py</span></a></span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216244"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216220"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216247"><span class="hs-identifier hs-var">py</span></a></span><span>
+</span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">SF
+  ((V2 Double, GameObj), Event Double)
+  ((V2 Double, GameObj), Event Double)
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216248"><span class="hs-identifier hs-var">px</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216220"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObj
+</span><a href="#local-6989586621679216252"><span class="hs-identifier hs-var">obj</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216219"><span class="hs-identifier hs-var">should_switch</span></a></span><span> </span><span class="annot"><span class="annottext">Event () -&gt; Double -&gt; Event Double
+forall a b. Event a -&gt; b -&gt; Event b
+</span><span class="hs-operator hs-var">`tag`</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216220"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621679216235"><span class="annot"><span class="annottext">horCalcLeft :: SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216235"><span class="hs-identifier hs-var hs-var">horCalcLeft</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span id="local-6989586621679216218"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679216218"><span class="hs-identifier hs-var">input</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621679216217"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216217"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Double Double
+forall a s. VectorSpace a s =&gt; SF a a
+</span><span class="hs-identifier hs-var">integral</span></span><span> </span><span class="annot"><span class="annottext">SF Double Double -&gt; (Double -&gt; Double) -&gt; SF Double Double
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; (c -&gt; d) -&gt; a b d
+</span><span class="hs-operator hs-var">&gt;&gt;^</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216243"><span class="hs-identifier hs-var">start</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216245"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621679216216"><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216216"><span class="hs-identifier hs-var">should_switch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Bool (Event ())
+</span><span class="hs-identifier hs-var">edge</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216217"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216248"><span class="hs-identifier hs-var">px</span></a></span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216244"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216217"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216248"><span class="hs-identifier hs-var">px</span></a></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">SF
+  ((V2 Double, GameObj), Event Double)
+  ((V2 Double, GameObj), Event Double)
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216217"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216247"><span class="hs-identifier hs-var">py</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObj
+</span><a href="#local-6989586621679216252"><span class="hs-identifier hs-var">obj</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216216"><span class="hs-identifier hs-var">should_switch</span></a></span><span> </span><span class="annot"><span class="annottext">Event () -&gt; Double -&gt; Event Double
+forall a b. Event a -&gt; b -&gt; Event b
+</span><span class="hs-operator hs-var">`tag`</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216217"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621679216215"><span class="annot"><span class="annottext">horCalcRight :: SF t ((V2 Double, GameObj), Event Double)
+</span><a href="#local-6989586621679216215"><span class="hs-identifier hs-var hs-var">horCalcRight</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span id="local-6989586621679216214"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679216214"><span class="hs-identifier hs-var">input</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-45"></span><span>      </span><span id="local-6989586621679216213"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216213"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Double Double
+forall a s. VectorSpace a s =&gt; SF a a
+</span><span class="hs-identifier hs-var">integral</span></span><span> </span><span class="annot"><span class="annottext">SF Double Double -&gt; (Double -&gt; Double) -&gt; SF Double Double
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; (c -&gt; d) -&gt; a b d
+</span><span class="hs-operator hs-var">&gt;&gt;^</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216243"><span class="hs-identifier hs-var">start</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216245"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span id="local-6989586621679216212"><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216212"><span class="hs-identifier hs-var">should_switch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Bool (Event ())
+</span><span class="hs-identifier hs-var">edge</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216213"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216248"><span class="hs-identifier hs-var">px</span></a></span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216244"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216213"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216248"><span class="hs-identifier hs-var">px</span></a></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">SF
+  ((V2 Double, GameObj), Event Double)
+  ((V2 Double, GameObj), Event Double)
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216213"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216247"><span class="hs-identifier hs-var">py</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObj
+</span><a href="#local-6989586621679216252"><span class="hs-identifier hs-var">obj</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216212"><span class="hs-identifier hs-var">should_switch</span></a></span><span> </span><span class="annot"><span class="annottext">Event () -&gt; Double -&gt; Event Double
+forall a b. Event a -&gt; b -&gt; Event b
+</span><span class="hs-operator hs-var">`tag`</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216213"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- |This controller is controlling state of the whole game. For now it just gets position of all</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- dynamic objects and uses ballController with given objects as an input to produce output</span><span>
+</span><span id="line-51"></span><span class="annot"><a href="GameController.html#gameController"><span class="hs-identifier hs-type">gameController</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Types.html#Ball"><span class="hs-identifier hs-type">Ball</span></a></span><span>          </span><span class="hs-comment">-- ^ Initial ball state</span><span>
+</span><span id="line-52"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Types.html#GameInfo"><span class="hs-identifier hs-type">GameInfo</span></a></span><span>     </span><span class="hs-comment">-- ^ Initial game info</span><span>
+</span><span id="line-53"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Types.html#GameSF"><span class="hs-identifier hs-type">GameSF</span></a></span><span>       </span><span class="hs-comment">-- ^ Signal function from GameInput to GameOutput</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- we switch on level change</span><span>
+</span><span id="line-55"></span><span id="gameController"><span class="annot"><span class="annottext">gameController :: Ball -&gt; GameInfo -&gt; GameSF
+</span><a href="GameController.html#gameController"><span class="hs-identifier hs-var hs-var">gameController</span></a></span></span><span> </span><span id="local-6989586621679216210"><span class="annot"><span class="annottext">b :: Ball
+</span><a href="#local-6989586621679216210"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621679216209"><span class="annot"><span class="annottext">gi :: GameInfo
+</span><a href="#local-6989586621679216209"><span class="hs-identifier hs-var">gi</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Types.html#GameInfo"><span class="hs-identifier hs-type">GameInfo</span></a></span><span> </span><span id="local-6989586621679216207"><span class="annot"><span class="annottext">sWidth :: CInt
+</span><a href="#local-6989586621679216207"><span class="hs-identifier hs-var">sWidth</span></a></span></span><span> </span><span id="local-6989586621679216206"><span class="annot"><span class="annottext">sHeight :: CInt
+</span><a href="#local-6989586621679216206"><span class="hs-identifier hs-var">sHeight</span></a></span></span><span> </span><span id="local-6989586621679216205"><span class="annot"><span class="annottext">tWidth :: CInt
+</span><a href="#local-6989586621679216205"><span class="hs-identifier hs-var">tWidth</span></a></span></span><span> </span><span id="local-6989586621679216204"><span class="annot"><span class="annottext">tHeight :: CInt
+</span><a href="#local-6989586621679216204"><span class="hs-identifier hs-var">tHeight</span></a></span></span><span> </span><span id="local-6989586621679216203"><span class="annot"><span class="annottext">objs :: [ObjsMap]
+</span><a href="#local-6989586621679216203"><span class="hs-identifier hs-var">objs</span></a></span></span><span> </span><span id="local-6989586621679216202"><span class="annot"><span class="annottext">dyn :: [[DynamicGameObj]]
+</span><a href="#local-6989586621679216202"><span class="hs-identifier hs-var">dyn</span></a></span></span><span> </span><span id="local-6989586621679216201"><span class="annot"><span class="annottext">lvl :: Int
+</span><a href="#local-6989586621679216201"><span class="hs-identifier hs-var">lvl</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SF GameInput (GameOutput, Event ()) -&gt; (() -&gt; GameSF) -&gt; GameSF
+forall a b c. SF a (b, Event c) -&gt; (c -&gt; SF a b) -&gt; SF a b
+</span><span class="hs-identifier hs-var">dSwitch</span></span><span> </span><span class="annot"><span class="annottext">SF GameInput (GameOutput, Event ())
+</span><a href="#local-6989586621679216199"><span class="hs-identifier hs-var">gc</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Ball -&gt; GameInfo -&gt; GameSF
+</span><a href="GameController.html#gameController"><span class="hs-identifier hs-var">gameController</span></a></span><span> </span><span class="annot"><span class="annottext">Ball
+</span><a href="#local-6989586621679216210"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">GameInfo
+</span><a href="#local-6989586621679216209"><span class="hs-identifier hs-var">gi</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">currLvl :: Int
+</span><a href="Types.html#currLvl"><span class="hs-identifier hs-var">currLvl</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679216201"><span class="hs-identifier hs-var">lvl</span></a></span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621679216199"><span class="annot"><span class="annottext">gc :: SF GameInput (GameOutput, Event ())
+</span><a href="#local-6989586621679216199"><span class="hs-identifier hs-var hs-var">gc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span id="local-6989586621679216197"><span class="annot"><span class="annottext">GameInput
+</span><a href="#local-6989586621679216197"><span class="hs-identifier hs-var">input</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621679216196"><span class="annot"><span class="annottext">[(V2 Double, GameObj)]
+</span><a href="#local-6989586621679216196"><span class="hs-identifier hs-var">dynamicObjectsList</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[SF () (V2 Double, GameObj)] -&gt; SF [()] [(V2 Double, GameObj)]
+forall a b. [SF a b] -&gt; SF [a] [b]
+</span><span class="hs-identifier hs-var">parZ</span></span><span> </span><span class="annot"><span class="annottext">[SF () (V2 Double, GameObj)]
+</span><a href="#local-6989586621679216194"><span class="hs-identifier hs-var">prepareSFs</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; () -&gt; [()]
+forall a. Int -&gt; a -&gt; [a]
+</span><span class="hs-identifier hs-var">replicate</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[DynamicGameObj] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[[DynamicGameObj]]
+</span><a href="#local-6989586621679216202"><span class="hs-identifier hs-var">dyn</span></a></span><span> </span><span class="annot"><span class="annottext">[[DynamicGameObj]] -&gt; Int -&gt; [DynamicGameObj]
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679216201"><span class="hs-identifier hs-var">lvl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- use dynamicObjectController for all dynamic objects</span><span>
+</span><span id="line-59"></span><span>      </span><span class="hs-comment">-- in next line we use ballController with game input and we connect static objects with dynamic objects to create one big map</span><span>
+</span><span id="line-60"></span><span>      </span><span id="local-6989586621679216190"><span class="annot"><span class="annottext">GameOutput
+</span><a href="#local-6989586621679216190"><span class="hs-identifier hs-var">output</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ball -&gt; GameInfo -&gt; SF (GameInput, ObjsMap) GameOutput
+</span><a href="BallController.html#ballController"><span class="hs-identifier hs-var">ballController</span></a></span><span> </span><span class="annot"><span class="annottext">Ball
+</span><a href="#local-6989586621679216210"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">GameInfo
+</span><a href="#local-6989586621679216209"><span class="hs-identifier hs-var">gi</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GameInput
+</span><a href="#local-6989586621679216197"><span class="hs-identifier hs-var">input</span></a></span><span class="hs-special">,</span><span> </span><span>
+</span><span id="line-61"></span><span>                          </span><span class="annot"><span class="annottext">ObjsMap -&gt; ObjsMap -&gt; ObjsMap
+forall k a. Ord k =&gt; Map k a -&gt; Map k a -&gt; Map k a
+</span><span class="hs-identifier hs-var">Map.union</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ObjsMap]
+</span><a href="#local-6989586621679216203"><span class="hs-identifier hs-var">objs</span></a></span><span> </span><span class="annot"><span class="annottext">[ObjsMap] -&gt; Int -&gt; ObjsMap
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679216201"><span class="hs-identifier hs-var">lvl</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ObjsMap -&gt; ObjsMap) -&gt; ObjsMap -&gt; ObjsMap
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[((Int, Int), GameObj)] -&gt; ObjsMap
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((V2 Double, GameObj) -&gt; ((Int, Int), GameObj))
+-&gt; [(V2 Double, GameObj)] -&gt; [((Int, Int), GameObj)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679216186"><span class="annot"><span class="annottext">o :: (V2 Double, GameObj)
+</span><a href="#local-6989586621679216186"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span id="local-6989586621679216185"><span class="annot"><span class="annottext">x :: Double
+</span><a href="#local-6989586621679216185"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679216184"><span class="annot"><span class="annottext">y :: Double
+</span><a href="#local-6989586621679216184"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679216183"><span class="annot"><span class="annottext">obj :: GameObj
+</span><a href="#local-6989586621679216183"><span class="hs-identifier hs-var">obj</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Int
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216185"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Int
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679216184"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GameObj
+</span><a href="#local-6989586621679216183"><span class="hs-identifier hs-var">obj</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(V2 Double, GameObj)]
+</span><a href="#local-6989586621679216196"><span class="hs-identifier hs-var">dynamicObjectsList</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>      </span><span id="local-6989586621679216181"><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216181"><span class="hs-identifier hs-var">won</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF Bool (Event ())
+</span><span class="hs-identifier hs-var">edge</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">GameOutput -&gt; Bool
+</span><a href="Types.html#didWin"><span class="hs-identifier hs-var hs-var">didWin</span></a></span><span> </span><span class="annot"><span class="annottext">GameOutput
+</span><a href="#local-6989586621679216190"><span class="hs-identifier hs-var">output</span></a></span><span>
+</span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">SF (GameOutput, Event ()) (GameOutput, Event ())
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GameOutput -&gt; GameOutput
+</span><a href="#local-6989586621679216179"><span class="hs-identifier hs-var">considerGameFinished</span></a></span><span> </span><span class="annot"><span class="annottext">GameOutput
+</span><a href="#local-6989586621679216190"><span class="hs-identifier hs-var">output</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Event ()
+</span><a href="#local-6989586621679216181"><span class="hs-identifier hs-var">won</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>        </span><span class="hs-comment">-- |Prepare dynamicObjectController for every dynamic object there is</span><span>
+</span><span id="line-67"></span><span>        </span><span class="annot"><a href="#local-6989586621679216194"><span class="hs-identifier hs-type">prepareSFs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Types.html#GameObj"><span class="hs-identifier hs-type">GameObj</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-68"></span><span>        </span><span id="local-6989586621679216194"><span class="annot"><span class="annottext">prepareSFs :: [SF () (V2 Double, GameObj)]
+</span><a href="#local-6989586621679216194"><span class="hs-identifier hs-var hs-var">prepareSFs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(DynamicGameObj -&gt; SF () (V2 Double, GameObj))
+-&gt; [DynamicGameObj] -&gt; [SF () (V2 Double, GameObj)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DynamicGameObj -&gt; Double -&gt; SF () (V2 Double, GameObj)
+</span><a href="GameController.html#dynamicObjectController"><span class="hs-operator hs-var">`dynamicObjectController`</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[[DynamicGameObj]]
+</span><a href="#local-6989586621679216202"><span class="hs-identifier hs-var">dyn</span></a></span><span> </span><span class="annot"><span class="annottext">[[DynamicGameObj]] -&gt; Int -&gt; [DynamicGameObj]
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679216201"><span class="hs-identifier hs-var">lvl</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span>        </span><span class="hs-comment">-- |Check whether we finished the whole game and modify GameOutput</span><span>
+</span><span id="line-71"></span><span>        </span><span class="annot"><a href="#local-6989586621679216179"><span class="hs-identifier hs-type">considerGameFinished</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Types.html#GameOutput"><span class="hs-identifier hs-type">GameOutput</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Types.html#GameOutput"><span class="hs-identifier hs-type">GameOutput</span></a></span><span>
+</span><span id="line-72"></span><span>        </span><span id="local-6989586621679216179"><span class="annot"><span class="annottext">considerGameFinished :: GameOutput -&gt; GameOutput
+</span><a href="#local-6989586621679216179"><span class="hs-identifier hs-var hs-var">considerGameFinished</span></a></span></span><span> </span><span id="local-6989586621679216178"><span class="annot"><span class="annottext">outin :: GameOutput
+</span><a href="#local-6989586621679216178"><span class="hs-identifier hs-var">outin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">GameOutput -&gt; Bool
+</span><a href="Types.html#didWin"><span class="hs-identifier hs-var hs-var">didWin</span></a></span><span> </span><span class="annot"><span class="annottext">GameOutput
+</span><a href="#local-6989586621679216178"><span class="hs-identifier hs-var">outin</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679216201"><span class="hs-identifier hs-var">lvl</span></a></span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">[ObjsMap] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[ObjsMap]
+</span><a href="#local-6989586621679216203"><span class="hs-identifier hs-var">objs</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">GameOutput
+</span><a href="#local-6989586621679216178"><span class="hs-identifier hs-var">outin</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">didFinishGame :: Bool
+</span><a href="#local-6989586621679216176"><span class="hs-identifier hs-var">didFinishGame</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">outLvl :: Int
+</span><a href="#local-6989586621679216175"><span class="hs-identifier hs-var">outLvl</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679216201"><span class="hs-identifier hs-var">lvl</span></a></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">GameOutput
+</span><a href="#local-6989586621679216178"><span class="hs-identifier hs-var">outin</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">outLvl :: Int
+</span><a href="#local-6989586621679216175"><span class="hs-identifier hs-var">outLvl</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679216201"><span class="hs-identifier hs-var">lvl</span></a></span><span class="hs-special">}</span></pre></body></html>

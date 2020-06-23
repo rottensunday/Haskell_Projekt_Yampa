@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : Utility
+Description : Utility functions
+-}</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Utility</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Linear</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Linear.Affine</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Types.html"><span class="hs-identifier">Types</span></a></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- |This functions filters out all far objects from ObjsMap map</span><span>
+</span><span id="line-14"></span><span class="annot"><a href="Utility.html#filterFarObjects"><span class="hs-identifier hs-type">filterFarObjects</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Types.html#GameInfo"><span class="hs-identifier hs-type">GameInfo</span></a></span><span>        </span><span class="hs-comment">-- ^ GameInfo is used to get tiles width and height</span><span>
+</span><span id="line-15"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Types.html#ObjsMap"><span class="hs-identifier hs-type">ObjsMap</span></a></span><span>          </span><span class="hs-comment">-- ^ ObjsMap to filter</span><span>
+</span><span id="line-16"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>     </span><span class="hs-comment">-- ^ Ball position </span><span>
+</span><span id="line-17"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Types.html#ObjsMap"><span class="hs-identifier hs-type">ObjsMap</span></a></span><span>          </span><span class="hs-comment">-- ^ Filtered ObjsMap</span><span>
+</span><span id="line-18"></span><span id="filterFarObjects"><span class="annot"><span class="annottext">filterFarObjects :: GameInfo -&gt; ObjsMap -&gt; Point V2 Int -&gt; ObjsMap
+</span><a href="Utility.html#filterFarObjects"><span class="hs-identifier hs-var hs-var">filterFarObjects</span></a></span></span><span> </span><span id="local-6989586621679215672"><span class="annot"><span class="annottext">gi :: GameInfo
+</span><a href="#local-6989586621679215672"><span class="hs-identifier hs-var">gi</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Types.html#GameInfo"><span class="hs-identifier hs-type">GameInfo</span></a></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679215670"><span class="annot"><span class="annottext">width :: CInt
+</span><a href="#local-6989586621679215670"><span class="hs-identifier hs-var">width</span></a></span></span><span> </span><span id="local-6989586621679215669"><span class="annot"><span class="annottext">height :: CInt
+</span><a href="#local-6989586621679215669"><span class="hs-identifier hs-var">height</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span class="hs-special">)</span><span> </span><span id="local-6989586621679215668"><span class="annot"><span class="annottext">objs :: ObjsMap
+</span><a href="#local-6989586621679215668"><span class="hs-identifier hs-var">objs</span></a></span></span><span> </span><span id="local-6989586621679215667"><span class="annot"><span class="annottext">p :: Point V2 Int
+</span><a href="#local-6989586621679215667"><span class="hs-identifier hs-var">p</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span id="local-6989586621679215664"><span class="annot"><span class="annottext">px :: Int
+</span><a href="#local-6989586621679215664"><span class="hs-identifier hs-var">px</span></a></span></span><span> </span><span id="local-6989586621679215663"><span class="annot"><span class="annottext">py :: Int
+</span><a href="#local-6989586621679215663"><span class="hs-identifier hs-var">py</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><span class="annottext">((Int, Int) -&gt; GameObj -&gt; Bool) -&gt; ObjsMap -&gt; ObjsMap
+forall k a. (k -&gt; a -&gt; Bool) -&gt; Map k a -&gt; Map k a
+</span><span class="hs-identifier hs-var">Map.filterWithKey</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679215661"><span class="annot"><span class="annottext">ix :: Int
+</span><a href="#local-6989586621679215661"><span class="hs-identifier hs-var">ix</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679215660"><span class="annot"><span class="annottext">iy :: Int
+</span><a href="#local-6989586621679215660"><span class="hs-identifier hs-var">iy</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215661"><span class="hs-identifier hs-var">ix</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215664"><span class="hs-identifier hs-var">px</span></a></span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215657"><span class="hs-identifier hs-var">maxWidth</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215661"><span class="hs-identifier hs-var">ix</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215664"><span class="hs-identifier hs-var">px</span></a></span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215657"><span class="hs-identifier hs-var">maxWidth</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215660"><span class="hs-identifier hs-var">iy</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215663"><span class="hs-identifier hs-var">py</span></a></span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215655"><span class="hs-identifier hs-var">maxHeight</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215660"><span class="hs-identifier hs-var">iy</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215663"><span class="hs-identifier hs-var">py</span></a></span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679215655"><span class="hs-identifier hs-var">maxHeight</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ObjsMap
+</span><a href="#local-6989586621679215668"><span class="hs-identifier hs-var">objs</span></a></span><span>
+</span><span id="line-20"></span><span>    </span><span class="hs-keyword">where</span><span> </span><span>
+</span><span id="line-21"></span><span>        </span><span id="local-6989586621679215657"><span class="annot"><span class="annottext">maxWidth :: Int
+</span><a href="#local-6989586621679215657"><span class="hs-identifier hs-var hs-var">maxWidth</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CInt -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="#local-6989586621679215670"><span class="hs-identifier hs-var">width</span></a></span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span class="annot"><span class="hs-number">2</span></span><span>
+</span><span id="line-22"></span><span>        </span><span id="local-6989586621679215655"><span class="annot"><span class="annottext">maxHeight :: Int
+</span><a href="#local-6989586621679215655"><span class="hs-identifier hs-var hs-var">maxHeight</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CInt -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="#local-6989586621679215669"><span class="hs-identifier hs-var">height</span></a></span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span class="annot"><span class="hs-number">2</span></span><span>
+</span><span id="line-23"></span><span>            </span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- |head which returns Nothing on empty list</span><span>
+</span><span id="line-25"></span><span id="local-6989586621679215653"><span class="annot"><a href="Utility.html#headMaybe"><span class="hs-identifier hs-type">headMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679215653"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679215653"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-26"></span><span id="headMaybe"><span class="annot"><span class="annottext">headMaybe :: [a] -&gt; Maybe a
+</span><a href="Utility.html#headMaybe"><span class="hs-identifier hs-var hs-var">headMaybe</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-27"></span><span class="annot"><a href="Utility.html#headMaybe"><span class="hs-identifier hs-var">headMaybe</span></a></span><span> </span><span id="local-6989586621679215651"><span class="annot"><span class="annottext">x :: [a]
+</span><a href="#local-6989586621679215651"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Maybe a) -&gt; a -&gt; Maybe a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[a] -&gt; a
+forall a. [a] -&gt; a
+</span><span class="hs-identifier hs-var">head</span></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621679215651"><span class="hs-identifier hs-var">x</span></a></span></pre></body></html>

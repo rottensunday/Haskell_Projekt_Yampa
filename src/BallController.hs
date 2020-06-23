@@ -31,12 +31,12 @@ import Utility
 ballController :: Ball                                -- ^ Initial ball
               -> GameInfo                             -- ^ Initial game state
               -> SF (GameInput, ObjsMap) GameOutput
-ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) gi = switch controller (\_ -> (ballController b gi))
+ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) gi = switch controller (const $ ballController b gi)
               where
                 controller :: SF (GameInput, ObjsMap) (GameOutput, Event ())
                 controller = proc inp@(input, objs) -> do
                   lmbReleased <- mouseEventReleasedParser -< input -- determine whether we released LMB
-                  nClicks <- accumHold 0 -< lmbReleased `tag` (\val -> val+1) -- count LMB clicks
+                  nClicks <- accumHold 0 -< lmbReleased `tag` (+1) -- count LMB clicks
                   qClicked <- qClickParser >>> arr isEvent -< input -- determine whether we clicked Q
 
                   -- we have to use delayed switch so jumpPower isn't set to 0 after LMB release. If this happens, we can't really use it to shoot our ball.
@@ -87,7 +87,7 @@ ballController b@(Ball p@(P (V2 px py)) v@(V2 vx vy) a@(V2 ax ay) r pow) gi = sw
                 getTag NoEvent NoEvent _ _ _ _ _ _ _ = undefined -- this cannot be called
                 getTag (Event ()) NoEvent modC@(V2 vx vy) modH p v a r rolling = Ball { -- after click
                                             position = p,
-                                            velocity = if rolling && vy > 0 then (V2 vx 0) else modC,
+                                            velocity = if rolling && vy > 0 then V2 vx 0 else modC,
                                             acceleration = a,
                                             radius = r,
                                             power = 0
@@ -116,7 +116,7 @@ clickSpeedModifier = proc input -> do
       returnA -< velChange
         where
           dir@(V2 vx vy) = Linear.Metric.normalize (mPos - pPos) -- determine direction of movement
-          velChange = (V2 pow pow) * dir -- our new velocity vector has length of 50 in direction of mouse position
+          velChange = V2 pow pow * dir -- our new velocity vector has length of 50 in direction of mouse position
 
 -- |hitSAModifier is a Hit Speed Acceleration Modifier. On collision we will change speed and acceleration.
 -- For example, when we're rolling and friction works and we hit a wall, friction direction should change.
@@ -127,7 +127,7 @@ hitSAModifier = proc input -> do
 
     Event ((Wall, UpSide), (v@(V2 vX vY), a@(V2 aX aY), rolling)) ->
       -- if we hit a ground and our velocity is very low, we should stop. If we hit a ground and are now rolling, we should apply friction.
-      returnA -< (V2 vX (if (abs vY <= 10) then 0 else if vY > 0 then vY * (-0.6) else vY),
+      returnA -< (V2 vX (if abs vY <= 10 then 0 else if vY > 0 then vY * (-0.6) else vY),
                   if rolling then V2 (calculateXAcc vX) aY else a)
 
     Event ((Wall, DownSide), (v@(V2 vX vY), a@(V2 aX aY), rolling)) ->
@@ -167,7 +167,7 @@ hitSAModifier = proc input -> do
 
   where calculateXAcc vX
           | vX <= 0   = 1.5
-          | otherwise = (-1.5)
+          | otherwise = -1.5
 
 -- |powerCalc is supposed to calculate power of ball shot.
 -- it just applies acc value to integral and switches, so we go back and forward
@@ -175,7 +175,7 @@ hitSAModifier = proc input -> do
 powerCalc :: Double           -- ^ Speed of power change
         -> Double             -- ^ Initial power value (used for switching)
         -> SF Bool Double
-powerCalc s start = switch calc (\cont -> powerCalc (-s) cont)
+powerCalc s start = switch calc (powerCalc (-s))
   where
     calc = proc input -> do
       val <- integral >>^ (+start) -< if input then s else 0
@@ -185,7 +185,7 @@ powerCalc s start = switch calc (\cont -> powerCalc (-s) cont)
 -- |computePrevVals updates our list of 3 recent positions
 computePrevVals :: SF (Double, Double, [V2 Double]) [V2 Double]
 computePrevVals = proc input@(px, py, valtabs) -> do
-  returnA -< [V2 px py, valtabs !! 0, valtabs !! 1]
+  returnA -< [V2 px py, head valtabs, valtabs !! 1]
 
 -- |getVA this is the most important SF: it is concerned with velocity. Our acceleration values are modified discretely, and our position value
 -- is based only on velocity. Velocity values are changed in continuous and discrete manner (it changes all the time based on acceleration,

@@ -14,7 +14,6 @@ import qualified SDL
 
 type GameSF = SF GameInput GameOutput
 
--- type WinInput = Event SDL.Event
 
 -- |Simple wrapper around SDL Texture which also contains texture size
 data Texture = Texture {

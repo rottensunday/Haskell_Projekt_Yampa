@@ -1,0 +1,260 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : Parser
+Description : Parse input
+-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE Arrows #-}</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Parser</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">FRP.Yampa</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Linear</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">threadDelay</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Foreign.C.Types</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">SDL</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">($=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Point</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Rectangle</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">SDL</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.IO.Encoding</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock.POSIX</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">getPOSIXTime</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Types.html"><span class="hs-identifier">Types</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- |Given GameInput, we get mouse position as a 2D Point</span><span>
+</span><span id="line-21"></span><span class="annot"><a href="Parser.html#mousePosParser"><span class="hs-identifier hs-type">mousePosParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="annot"><a href="Types.html#GameInput"><span class="hs-identifier hs-type">GameInput</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span id="mousePosParser"><span class="annot"><span class="annottext">mousePosParser :: SF GameInput (Point V2 Double)
+</span><a href="Parser.html#mousePosParser"><span class="hs-identifier hs-var hs-var">mousePosParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span id="local-6989586621679215432"><span class="annot"><span class="annottext">GameInput
+</span><a href="#local-6989586621679215432"><span class="hs-identifier hs-var">gi</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621679215431"><span class="annot"><span class="annottext">Point V2 Double
+</span><a href="#local-6989586621679215431"><span class="hs-identifier hs-var">doublePos</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SF (Point V2 CInt) (Point V2 Double)
+</span><a href="Parser.html#intToDoubleConverter"><span class="hs-identifier hs-var">intToDoubleConverter</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">GameInput -&gt; Point V2 CInt
+</span><a href="Types.html#mPos"><span class="hs-identifier hs-var hs-var">mPos</span></a></span><span> </span><span class="annot"><span class="annottext">GameInput
+</span><a href="#local-6989586621679215432"><span class="hs-identifier hs-var">gi</span></a></span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><span class="annottext">SF (Point V2 Double) (Point V2 Double)
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Point V2 Double
+</span><a href="#local-6989586621679215431"><span class="hs-identifier hs-var">doublePos</span></a></span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="annot"><a href="Parser.html#intToDoubleConverter"><span class="hs-identifier hs-type">intToDoubleConverter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">CInt</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span id="intToDoubleConverter"><span class="annot"><span class="annottext">intToDoubleConverter :: SF (Point V2 CInt) (Point V2 Double)
+</span><a href="Parser.html#intToDoubleConverter"><span class="hs-identifier hs-var hs-var">intToDoubleConverter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span id="local-6989586621679215427"><span class="annot"><span class="annottext">gi :: Point V2 CInt
+</span><a href="#local-6989586621679215427"><span class="hs-identifier hs-var">gi</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">V2</span></span><span> </span><span id="local-6989586621679215424"><span class="annot"><span class="annottext">px :: CInt
+</span><a href="#local-6989586621679215424"><span class="hs-identifier hs-var">px</span></a></span></span><span> </span><span id="local-6989586621679215423"><span class="annot"><span class="annottext">py :: CInt
+</span><a href="#local-6989586621679215423"><span class="hs-identifier hs-var">py</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679215422"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679215422"><span class="hs-identifier hs-var">posX</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(CInt -&gt; Double) -&gt; SF CInt Double
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="annot"><span class="annottext">CInt -&gt; Double
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="#local-6989586621679215424"><span class="hs-identifier hs-var">px</span></a></span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621679215421"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679215421"><span class="hs-identifier hs-var">posY</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(CInt -&gt; Double) -&gt; SF CInt Double
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="annot"><span class="annottext">CInt -&gt; Double
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">CInt
+</span><a href="#local-6989586621679215423"><span class="hs-identifier hs-var">py</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="annottext">SF (Point V2 Double) (Point V2 Double)
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">V2 Double -&gt; Point V2 Double
+forall (f :: * -&gt; *) a. f a -&gt; Point f a
+</span><span class="hs-identifier hs-var">P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; V2 Double
+forall a. a -&gt; a -&gt; V2 a
+</span><span class="hs-identifier hs-var">V2</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679215422"><span class="hs-identifier hs-var">posX</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679215421"><span class="hs-identifier hs-var">posY</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- |Given GameInput, we check whether Q button was clicked</span><span>
+</span><span id="line-33"></span><span class="annot"><a href="Parser.html#qClickParser"><span class="hs-identifier hs-type">qClickParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="annot"><a href="Types.html#GameInput"><span class="hs-identifier hs-type">GameInput</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Event</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span id="qClickParser"><span class="annot"><span class="annottext">qClickParser :: SF GameInput (Event ())
+</span><a href="Parser.html#qClickParser"><span class="hs-identifier hs-var hs-var">qClickParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(GameInput -&gt; Event ()) -&gt; SF GameInput (Event ())
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="annot"><span class="annottext">GameInput -&gt; Event ()
+</span><a href="Types.html#qClick"><span class="hs-identifier hs-var hs-var">qClick</span></a></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- |Given GameInput, we check whether LMB is pressed</span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Parser.html#mousePressedParser"><span class="hs-identifier hs-type">mousePressedParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="annot"><a href="Types.html#GameInput"><span class="hs-identifier hs-type">GameInput</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-38"></span><span id="mousePressedParser"><span class="annot"><span class="annottext">mousePressedParser :: SF GameInput Bool
+</span><a href="Parser.html#mousePressedParser"><span class="hs-identifier hs-var hs-var">mousePressedParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(GameInput -&gt; Bool) -&gt; SF GameInput Bool
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="annot"><span class="annottext">GameInput -&gt; Bool
+</span><a href="Types.html#mPressed"><span class="hs-identifier hs-var hs-var">mPressed</span></a></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- |Given GameInput, we check whether LMB was just pressed</span><span>
+</span><span id="line-41"></span><span class="annot"><a href="Parser.html#mouseEventPressedParser"><span class="hs-identifier hs-type">mouseEventPressedParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="annot"><a href="Types.html#GameInput"><span class="hs-identifier hs-type">GameInput</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Event</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span id="mouseEventPressedParser"><span class="annot"><span class="annottext">mouseEventPressedParser :: SF GameInput (Event ())
+</span><a href="Parser.html#mouseEventPressedParser"><span class="hs-identifier hs-var hs-var">mouseEventPressedParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(GameInput -&gt; Event ()) -&gt; SF GameInput (Event ())
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="annot"><span class="annottext">GameInput -&gt; Event ()
+</span><a href="Types.html#mEventPressed"><span class="hs-identifier hs-var hs-var">mEventPressed</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- |Given GameInput, we check whether LMB was just released</span><span>
+</span><span id="line-45"></span><span class="annot"><a href="Parser.html#mouseEventReleasedParser"><span class="hs-identifier hs-type">mouseEventReleasedParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="annot"><a href="Types.html#GameInput"><span class="hs-identifier hs-type">GameInput</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Event</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span id="mouseEventReleasedParser"><span class="annot"><span class="annottext">mouseEventReleasedParser :: SF GameInput (Event ())
+</span><a href="Parser.html#mouseEventReleasedParser"><span class="hs-identifier hs-var hs-var">mouseEventReleasedParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(GameInput -&gt; Event ()) -&gt; SF GameInput (Event ())
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="annot"><span class="annottext">GameInput -&gt; Event ()
+</span><a href="Types.html#mEventReleased"><span class="hs-identifier hs-var hs-var">mEventReleased</span></a></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- |Given GameInput, we get input time</span><span>
+</span><span id="line-49"></span><span class="annot"><a href="Parser.html#timeParser"><span class="hs-identifier hs-type">timeParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SF</span></span><span> </span><span class="annot"><a href="Types.html#GameInput"><span class="hs-identifier hs-type">GameInput</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-50"></span><span id="timeParser"><span class="annot"><span class="annottext">timeParser :: SF GameInput Integer
+</span><a href="Parser.html#timeParser"><span class="hs-identifier hs-var hs-var">timeParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(GameInput -&gt; Integer) -&gt; SF GameInput Integer
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="annot"><span class="annottext">GameInput -&gt; Integer
+</span><a href="Types.html#currTimeIn"><span class="hs-identifier hs-var hs-var">currTimeIn</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- |Using SDL, we get all important inputs from user and create GameInput object</span><span>
+</span><span id="line-53"></span><span class="annot"><a href="Parser.html#parseInput"><span class="hs-identifier hs-type">parseInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Types.html#GameInput"><span class="hs-identifier hs-type">GameInput</span></a></span><span>
+</span><span id="line-54"></span><span id="parseInput"><span class="annot"><span class="annottext">parseInput :: IO GameInput
+</span><a href="Parser.html#parseInput"><span class="hs-identifier hs-var hs-var">parseInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679215409"><span class="annot"><span class="annottext">[Event]
+</span><a href="#local-6989586621679215409"><span class="hs-identifier hs-var">events</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO [Event]
+forall (m :: * -&gt; *). (Functor m, MonadIO m) =&gt; m [Event]
+</span><span class="hs-identifier hs-var">SDL.pollEvents</span></span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679215407"><span class="annot"><span class="annottext">Point V2 CInt
+</span><a href="#local-6989586621679215407"><span class="hs-identifier hs-var">mousePos</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Point V2 CInt)
+forall (m :: * -&gt; *). MonadIO m =&gt; m (Point V2 CInt)
+</span><span class="hs-identifier hs-var">SDL.getAbsoluteMouseLocation</span></span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621679215405"><span class="annot"><span class="annottext">MouseButton -&gt; Bool
+</span><a href="#local-6989586621679215405"><span class="hs-identifier hs-var">checkBtn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (MouseButton -&gt; Bool)
+forall (m :: * -&gt; *). MonadIO m =&gt; m (MouseButton -&gt; Bool)
+</span><span class="hs-identifier hs-var">SDL.getMouseButtons</span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679215403"><span class="annot"><span class="annottext">eventIsButtonPressed :: Event -&gt; Bool
+</span><a href="#local-6989586621679215403"><span class="hs-identifier hs-var hs-var">eventIsButtonPressed</span></a></span></span><span> </span><span id="local-6989586621679215402"><span class="annot"><span class="annottext">event :: Event
+</span><a href="#local-6989586621679215402"><span class="hs-identifier hs-var">event</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Event -&gt; EventPayload
+</span><span class="hs-identifier hs-var hs-var">SDL.eventPayload</span></span><span> </span><span class="annot"><span class="annottext">Event
+</span><a href="#local-6989586621679215402"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-60"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">SDL.MouseButtonEvent</span></span><span> </span><span id="local-6989586621679215399"><span class="annot"><span class="annottext">buttonEvent :: MouseButtonEventData
+</span><a href="#local-6989586621679215399"><span class="hs-identifier hs-var">buttonEvent</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>            </span><span class="annot"><span class="annottext">MouseButtonEventData -&gt; InputMotion
+</span><span class="hs-identifier hs-var hs-var">SDL.mouseButtonEventMotion</span></span><span> </span><span class="annot"><span class="annottext">MouseButtonEventData
+</span><a href="#local-6989586621679215399"><span class="hs-identifier hs-var">buttonEvent</span></a></span><span> </span><span class="annot"><span class="annottext">InputMotion -&gt; InputMotion -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">InputMotion
+</span><span class="hs-identifier hs-var">SDL.Pressed</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span>
+</span><span id="line-62"></span><span>            </span><span class="annot"><span class="annottext">MouseButtonEventData -&gt; MouseButton
+</span><span class="hs-identifier hs-var hs-var">SDL.mouseButtonEventButton</span></span><span> </span><span class="annot"><span class="annottext">MouseButtonEventData
+</span><a href="#local-6989586621679215399"><span class="hs-identifier hs-var">buttonEvent</span></a></span><span> </span><span class="annot"><span class="annottext">MouseButton -&gt; MouseButton -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">MouseButton
+</span><span class="hs-identifier hs-var">SDL.ButtonLeft</span></span><span>
+</span><span id="line-63"></span><span>          </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-64"></span><span>      </span><span id="local-6989586621679215393"><span class="annot"><span class="annottext">eventIsButtonReleased :: Event -&gt; Bool
+</span><a href="#local-6989586621679215393"><span class="hs-identifier hs-var hs-var">eventIsButtonReleased</span></a></span></span><span> </span><span id="local-6989586621679215392"><span class="annot"><span class="annottext">event :: Event
+</span><a href="#local-6989586621679215392"><span class="hs-identifier hs-var">event</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span>
+</span><span id="line-65"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Event -&gt; EventPayload
+</span><span class="hs-identifier hs-var hs-var">SDL.eventPayload</span></span><span> </span><span class="annot"><span class="annottext">Event
+</span><a href="#local-6989586621679215392"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-66"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">SDL.MouseButtonEvent</span></span><span> </span><span id="local-6989586621679215391"><span class="annot"><span class="annottext">buttonEvent :: MouseButtonEventData
+</span><a href="#local-6989586621679215391"><span class="hs-identifier hs-var">buttonEvent</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-67"></span><span>            </span><span class="annot"><span class="annottext">MouseButtonEventData -&gt; InputMotion
+</span><span class="hs-identifier hs-var hs-var">SDL.mouseButtonEventMotion</span></span><span> </span><span class="annot"><span class="annottext">MouseButtonEventData
+</span><a href="#local-6989586621679215391"><span class="hs-identifier hs-var">buttonEvent</span></a></span><span> </span><span class="annot"><span class="annottext">InputMotion -&gt; InputMotion -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">InputMotion
+</span><span class="hs-identifier hs-var">SDL.Released</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span>
+</span><span id="line-68"></span><span>            </span><span class="annot"><span class="annottext">MouseButtonEventData -&gt; MouseButton
+</span><span class="hs-identifier hs-var hs-var">SDL.mouseButtonEventButton</span></span><span> </span><span class="annot"><span class="annottext">MouseButtonEventData
+</span><a href="#local-6989586621679215391"><span class="hs-identifier hs-var">buttonEvent</span></a></span><span> </span><span class="annot"><span class="annottext">MouseButton -&gt; MouseButton -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">MouseButton
+</span><span class="hs-identifier hs-var">SDL.ButtonLeft</span></span><span>
+</span><span id="line-69"></span><span>          </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-70"></span><span>      </span><span id="local-6989586621679215389"><span class="annot"><span class="annottext">eventIsQPress :: Event -&gt; Bool
+</span><a href="#local-6989586621679215389"><span class="hs-identifier hs-var hs-var">eventIsQPress</span></a></span></span><span> </span><span id="local-6989586621679215388"><span class="annot"><span class="annottext">event :: Event
+</span><a href="#local-6989586621679215388"><span class="hs-identifier hs-var">event</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Event -&gt; EventPayload
+</span><span class="hs-identifier hs-var hs-var">SDL.eventPayload</span></span><span> </span><span class="annot"><span class="annottext">Event
+</span><a href="#local-6989586621679215388"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-72"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">SDL.KeyboardEvent</span></span><span> </span><span id="local-6989586621679215386"><span class="annot"><span class="annottext">keyboardEvent :: KeyboardEventData
+</span><a href="#local-6989586621679215386"><span class="hs-identifier hs-var">keyboardEvent</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-73"></span><span>            </span><span class="annot"><span class="annottext">KeyboardEventData -&gt; InputMotion
+</span><span class="hs-identifier hs-var hs-var">SDL.keyboardEventKeyMotion</span></span><span> </span><span class="annot"><span class="annottext">KeyboardEventData
+</span><a href="#local-6989586621679215386"><span class="hs-identifier hs-var">keyboardEvent</span></a></span><span> </span><span class="annot"><span class="annottext">InputMotion -&gt; InputMotion -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">InputMotion
+</span><span class="hs-identifier hs-var">SDL.Pressed</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span>
+</span><span id="line-74"></span><span>            </span><span class="annot"><span class="annottext">Keysym -&gt; Keycode
+</span><span class="hs-identifier hs-var hs-var">SDL.keysymKeycode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KeyboardEventData -&gt; Keysym
+</span><span class="hs-identifier hs-var hs-var">SDL.keyboardEventKeysym</span></span><span> </span><span class="annot"><span class="annottext">KeyboardEventData
+</span><a href="#local-6989586621679215386"><span class="hs-identifier hs-var">keyboardEvent</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Keycode -&gt; Keycode -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Keycode
+</span><span class="hs-identifier hs-var">SDL.KeycodeQ</span></span><span>
+</span><span id="line-75"></span><span>          </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621679215381"><span class="annot"><span class="annottext">qPressed :: Bool
+</span><a href="#local-6989586621679215381"><span class="hs-identifier hs-var hs-var">qPressed</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Event -&gt; Bool) -&gt; [Event] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="annot"><span class="annottext">Event -&gt; Bool
+</span><a href="#local-6989586621679215389"><span class="hs-identifier hs-var">eventIsQPress</span></a></span><span> </span><span class="annot"><span class="annottext">[Event]
+</span><a href="#local-6989586621679215409"><span class="hs-identifier hs-var">events</span></a></span><span>
+</span><span id="line-77"></span><span>      </span><span id="local-6989586621679215379"><span class="annot"><span class="annottext">lmbPressed :: Bool
+</span><a href="#local-6989586621679215379"><span class="hs-identifier hs-var hs-var">lmbPressed</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Event -&gt; Bool) -&gt; [Event] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="annot"><span class="annottext">Event -&gt; Bool
+</span><a href="#local-6989586621679215403"><span class="hs-identifier hs-var">eventIsButtonPressed</span></a></span><span> </span><span class="annot"><span class="annottext">[Event]
+</span><a href="#local-6989586621679215409"><span class="hs-identifier hs-var">events</span></a></span><span>
+</span><span id="line-78"></span><span>      </span><span id="local-6989586621679215378"><span class="annot"><span class="annottext">lmbReleased :: Bool
+</span><a href="#local-6989586621679215378"><span class="hs-identifier hs-var hs-var">lmbReleased</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Event -&gt; Bool) -&gt; [Event] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="annot"><span class="annottext">Event -&gt; Bool
+</span><a href="#local-6989586621679215393"><span class="hs-identifier hs-var">eventIsButtonReleased</span></a></span><span> </span><span class="annot"><span class="annottext">[Event]
+</span><a href="#local-6989586621679215409"><span class="hs-identifier hs-var">events</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621679215377"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679215377"><span class="hs-identifier hs-var">inTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; Integer
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">(POSIXTime -&gt; Integer)
+-&gt; (POSIXTime -&gt; POSIXTime) -&gt; POSIXTime -&gt; Integer
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">POSIXTime -&gt; POSIXTime -&gt; POSIXTime
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span class="annot"><span class="hs-number">1000000</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(POSIXTime -&gt; Integer) -&gt; IO POSIXTime -&gt; IO Integer
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IO POSIXTime
+</span><span class="hs-identifier hs-var">getPOSIXTime</span></span><span> </span><span class="hs-comment">-- POSIX Time in microseconds</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><span class="annottext">GameInput -&gt; IO GameInput
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">GameInput :: Bool
+-&gt; Event ()
+-&gt; Event ()
+-&gt; Point V2 CInt
+-&gt; Event ()
+-&gt; Integer
+-&gt; GameInput
+</span><a href="Types.html#GameInput"><span class="hs-identifier hs-type hs-type">GameInput</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">mPressed :: Bool
+</span><a href="Types.html#mPressed"><span class="hs-identifier hs-var">mPressed</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MouseButton -&gt; Bool
+</span><a href="#local-6989586621679215405"><span class="hs-identifier hs-var">checkBtn</span></a></span><span> </span><span class="annot"><span class="annottext">MouseButton
+</span><span class="hs-identifier hs-var">SDL.ButtonLeft</span></span><span class="hs-special">,</span><span> </span><span>
+</span><span id="line-81"></span><span>                    </span><span class="annot"><span class="annottext">mEventPressed :: Event ()
+</span><a href="Types.html#mEventPressed"><span class="hs-identifier hs-var">mEventPressed</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679215379"><span class="hs-identifier hs-var">lmbPressed</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">() -&gt; Event ()
+forall a. a -&gt; Event a
+</span><span class="hs-identifier hs-var">Event</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Event ()
+forall a. Event a
+</span><span class="hs-identifier hs-var">NoEvent</span></span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>                    </span><span class="annot"><span class="annottext">mEventReleased :: Event ()
+</span><a href="Types.html#mEventReleased"><span class="hs-identifier hs-var">mEventReleased</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679215378"><span class="hs-identifier hs-var">lmbReleased</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">() -&gt; Event ()
+forall a. a -&gt; Event a
+</span><span class="hs-identifier hs-var">Event</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Event ()
+forall a. Event a
+</span><span class="hs-identifier hs-var">NoEvent</span></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>                    </span><span class="annot"><span class="annottext">mPos :: Point V2 CInt
+</span><a href="Types.html#mPos"><span class="hs-identifier hs-var">mPos</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Point V2 CInt
+</span><a href="#local-6989586621679215407"><span class="hs-identifier hs-var">mousePos</span></a></span><span class="hs-special">,</span><span> </span><span>
+</span><span id="line-84"></span><span>                    </span><span class="annot"><span class="annottext">qClick :: Event ()
+</span><a href="Types.html#qClick"><span class="hs-identifier hs-var">qClick</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679215381"><span class="hs-identifier hs-var">qPressed</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">() -&gt; Event ()
+forall a. a -&gt; Event a
+</span><span class="hs-identifier hs-var">Event</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Event ()
+forall a. Event a
+</span><span class="hs-identifier hs-var">NoEvent</span></span><span class="hs-special">,</span><span>
+</span><span id="line-85"></span><span>                    </span><span class="annot"><span class="annottext">currTimeIn :: Integer
+</span><a href="Types.html#currTimeIn"><span class="hs-identifier hs-var">currTimeIn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679215377"><span class="hs-identifier hs-var">inTime</span></a></span><span> </span><span class="hs-special">}</span><span> </span></pre></body></html>
